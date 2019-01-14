@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 public class Checker {
 
-  protected Logger logger = LogManager.getLogger(Config.class);
+  protected Logger logger = LogManager.getLogger(Checker.class);
 
 
   private String name = null;

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Utilities")
 class UtilsTest {
-  protected static Logger logger = LogManager.getLogger(ConfigTest.class);
+  protected static Logger logger = LogManager.getLogger(UtilsTest.class);
   private static ObjectMapper sMapper = new ObjectMapper();
 
   protected boolean sameJson(String json1, String json2) {
