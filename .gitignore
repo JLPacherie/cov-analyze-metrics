@@ -1,2 +1,10 @@
 tmp
 
+
+logs/
+
+target/
+
+out/
+
+*.xml
