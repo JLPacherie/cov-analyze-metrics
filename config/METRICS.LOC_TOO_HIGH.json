@@ -1,0 +1,19 @@
+{
+  // Version of the syntax for this checker.
+  "version": "1.0",
+  // The name of the checker as to appear in Coverity defects
+  "name": "METRICS.LOC_TOO_HIGH",
+  // A short and generic descrption of the checker purpose
+  "description": "Detects functions with a number of line of code above a threshold",
+  // The list of the metrics in Coverity with their associated default tresholds
+  "thresholds": [
+    {
+      // The name of the theshold the user can adjust from the CLI
+      "name" : "loc",
+      // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
+      "metrics": "lc",
+      // The default theshold
+      "threshold": 200
+    }
+  ]
+}

@@ -102,3 +102,11 @@ The resulting CSV file is made of
 - Add the output of the checker script to the whole cov-import-result JSON file
 
 ### Perform import of metrics defect JSON file
+
+# For the Future
+
+# Ehencements
+
+* Globally (for all checkers) or each checker support filtering out / in some functions and functions from file based
+  on RegEx pattern matching. For example, it will allow to disable checker on C/C++ standard includes based on either
+  source file location or class / function prefixes.

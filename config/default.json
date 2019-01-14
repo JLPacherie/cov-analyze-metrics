@@ -1,0 +1,51 @@
+// ****************************************************************************
+// cov-analyze-metrics
+//
+// ****************************************************************************
+{
+  // Syntax version
+  "version": "1.0",
+
+  // Name of the configuration
+  "name": "default",
+
+  // Description of the configuration
+  "description": "Default Coverity metrics analysis configuration",
+
+  // Location of the checkers configuration file
+  "config": "./config",
+
+  // This is the location of the Coverity intermediate directory.
+  "idir": "",
+  "output": "",
+
+  "excluded-files": [
+    "/usr/include/.*"
+  ],
+
+
+  // List of enabked checkers.
+  "checkers": [
+
+    {
+      "name": "METRICS.LOC_TOO_HIGH",
+      "thresholds": [
+        {
+          "metric": "loc",
+          "value": 230.0
+        }
+      ]
+    },
+
+    {
+      "name": "METRICS.CCM_TOO_HIGH",
+      "thresholds": [
+        {
+          "metric": "ccm",
+          "value": 50
+        }
+      ]
+
+    }
+  ]
+}

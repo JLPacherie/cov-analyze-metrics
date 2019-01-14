@@ -1,0 +1,46 @@
+{
+  // Version of the syntax for this checker.
+  "version": "1.0",
+  // The name of the checker as to appear in Coverity defects
+  "name": "METRICS.CCM_TOO_HIGH",
+  // A short and generic descrption of the checker purpose
+  "description": "Detects functions with a Cyclomatic Complexity above a threshold",
+  // The list of the metrics in Coverity with their associated default tresholds
+  "thresholds": [
+    {
+      // The name of the theshold the user can adjust from the CLI
+      "name": "ccm",
+      // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
+      "metrics": "cc",
+      // The default theshold
+      "threshold": 12
+    }
+  ],
+
+  "defect-template": {
+    "checker": "METRICS.CCM_TOO_HIGH",
+    "extra": "metric_ccm_violation",
+    "file": "$fileName",
+    "function": "$funcName",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "CCM too high",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Writing functions with too many branches is harder to maintain. The Cyclomatic Complexity Measure (MacCabe) for this function is $metricsMeasure which is above the threshold $metricThreshold.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "CCM metric violation",
+        "file": "$fileName",
+        "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
+        "linkText": "Wikipedia on CCM",
+        "description": "The Cyclomatic Complexity Measure (MacCabe) is $metricsMeasure which is above the threshold $metricThreshold.",
+        "line": 0,
+        "main": true
+      }
+    ]
+  }
+}

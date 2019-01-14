@@ -1,0 +1,46 @@
+// ****************************************************************************
+// cov-analyze-metrics
+//
+// ****************************************************************************
+{
+  // Syntax version
+  "version": "1.0",
+
+  // Name of the configuration
+  "name": "libXML2",
+
+  // Description of the configuration
+  "description": "Coverity metrics analysis configuration for libXML2",
+
+  // Location of the checkers configuration file
+  "config": "./config",
+
+  // This is the location of the Coverity intermediate directory.
+  "idir": "/home/pacherie/Workspaces/Demos/idirs/libXML2-v2.7.0",
+  "output": "-quality",
+
+  // List of enabked checkers.
+  "checkers": [
+
+    {
+      "name": "METRICS.LOC_TOO_HIGH",
+      "thresholds": [
+        {
+          "metric": "loc",
+          "value": 230.0
+        }
+      ]
+    },
+
+    {
+      "name": "METRICS.CCM_TOO_HIGH",
+      "thresholds": [
+        {
+          "metric": "ccm",
+          "value": 10
+        }
+      ]
+
+    }
+  ]
+}
