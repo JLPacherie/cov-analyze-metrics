@@ -1,10 +1,9 @@
 tmp
 
-
 logs/
 
 target/
 
 out/
 
-*.xml
+.idea/libraries/*.xml

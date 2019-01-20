@@ -42,20 +42,20 @@ public class Config {
 
     private Options options = null;
 
-    /**
-     * The list of filters defined at the configuration level to include or exclude some function prefix for checking.
-     */
-    private List<Function<FuncMetrics, Boolean>> exclusionFilters = new ArrayList<>();
+  /**
+   * The list of filters defined at the configuration level to include or exclude some function prefix for checking.
+   */
+  private List<Function<FuncMetrics, Boolean>> exclusionFilters = new ArrayList<>();
 
-    /**
-     * The list of enabled chechets by the current configuration.
-     */
-    public List<Checker> enabledCheckers = new ArrayList<Checker>();
+  /**
+   * The list of enabled chechets by the current configuration.
+   */
+  public List<Checker> enabledCheckers = new ArrayList<Checker>();
 
-    /**
-     * The list of all available checkers (and not yet enabled).
-     */
-    public List<Checker> availableCheckers = new ArrayList<Checker>();
+  /**
+   * The list of all available checkers (and not yet enabled).
+   */
+  public List<Checker> availableCheckers = new ArrayList<Checker>();
 
     // ------------------------------------------------------------------------------------------------------------------
     // Constructors.
@@ -126,12 +126,19 @@ public class Config {
                     .desc("Specify the main configuration directory")
                     .build());
 
-            options.addOption(Option.builder("dir")
-                    .required(false)
-                    .longOpt("dir")
-                    .numberOfArgs(1)
-                    .desc("Specify the Coverity intermediate directory")
-                    .build());
+      options.addOption(Option.builder("output")
+              .required(false)
+              .longOpt("output-tag")
+              .numberOfArgs(1)
+              .desc("Specify the Coverity output in the intermediate directory")
+              .build());
+
+      options.addOption(Option.builder("D")
+              .longOpt("overwrite")
+              .numberOfArgs(2)
+              .valueSeparator('=')
+              .desc("Overwrite value for given JSON property")
+              .build());
 
             options.addOption(Option.builder("D")
                     .longOpt("overwrite")
@@ -295,22 +302,28 @@ public class Config {
     // ******************************************************************************************************************
     //
 
-    public String getStripPath() {
-        return stripPath;
-    }
+  /** Returns the path prefix to strip as configured by users. */
+  public String getStripPath() {
+    return stripPath;
+  }
 
-    public void setStripPath(String stripPath) {
-        this.stripPath = stripPath;
-    }
+  /** Change the path prefix to strip from function's file name. */
+  public void setStripPath(String stripPath) {
+    this.stripPath = stripPath;
+  }
 
     //
     // ******************************************************************************************************************
     //
 
-    /**
-     * Move the specified checker to the list of enabled checkers.
-     */
-    public Checker enableChecker(String name) {
+  /**
+   * Move the specified checker to the list of enabled checkers. A checker with the given name should be
+   * listed in the available checkers and will then be moved to the list of the enabled checkers.
+   *
+   * @param name The name of the available  checker to search for
+   * @return The now enabled checker  the name or null if either already enabled or not available.
+   */
+  public Checker enableChecker(String name) {
 
         assert (name != null) && (!name.isEmpty()) : "Invalid checker name to enable: " + name;
         assert getAvailableChecker(name) != null : "No checker available with name: " + name;
@@ -332,42 +345,68 @@ public class Config {
         return checker;
     }
 
-    public Checker getAvailableChecker(String name) {
-        Checker result = null;
-        if (name != null)
-            result = availableCheckers.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
-        return result;
-    }
+  //
+  // ******************************************************************************************************************
+  //
 
-    public Checker getEnabledChecker(String name) {
-        Checker result = null;
-        if (name != null)
-            result = enabledCheckers.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
-        return result;
-    }
+  /**
+   * Returns an available checker identified by the given name if there's one.
+   *
+   * @param name The name of the available  checker to search for
+   * @return The available checker matching the name or null.
+   */
+  public Checker getAvailableChecker(String name) {
+    Checker result = null;
+    if (name != null)
+      result = availableCheckers.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
+    return result;
+  }
+
+  //
+  // ******************************************************************************************************************
+  //
+
+  /**
+   * Returns an enabled checker identified by the given name, if there's one.
+   *
+   * @param name The name of the enabled checker to search for
+   * @return The enabled checker matching the name or null.
+   */
+  public Checker getEnabledChecker(String name) {
+    Checker result = null;
+    if (name != null)
+      result = enabledCheckers.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
+    return result;
+  }
 
     //
     // ******************************************************************************************************************
     //
 
-    public boolean addFileFilter(String regex, boolean excluded) {
-        boolean result = regex != null;
-        if (result) {
-            try {
-                Pattern pattern = Pattern.compile(regex);
+  /**
+   * Adds an exclusion or inclusion file path filter with the given regular expression.
+   *
+   * @param regex    The regular expression that should match the entire pathname for the filter to apply
+   * @param excluded If true then this is an exclusion filter, ohterwise it's an inclusion filter
+   */
+  public boolean addFileFilter(String regex, boolean excluded) {
+    boolean result = regex != null;
+    if (result) {
+      try {
+        Pattern pattern = Pattern.compile(regex);
 
                 // A filter returns TRUE if the fnmetrics is excluded
 
-                Function<FuncMetrics, Boolean> filter = (fnmetrics) -> {
-                    if (fnmetrics != null) {
-                        String pathname = fnmetrics.getPathname();
-                        Matcher matcher = pattern.matcher(pathname);
-                        return (excluded) ? (matcher.matches()) : !matcher.matches();
-                    }
-                    return false;
-                };
+        Function<FuncMetrics, Boolean> filter = (fnmetrics) -> {
+          if (fnmetrics != null) {
+            String pathname = fnmetrics.getPathname();
+            Matcher matcher = pattern.matcher(pathname);
+            return (excluded) ? (matcher.matches()) : !matcher.matches();
+          }
+          return false;
+        };
 
-                exclusionFilters.add(filter);
+        exclusionFilters.add(filter);
 
                 logger.info("Adding filter, all functions defined in files matching " + regex + " are ignored");
             } catch (PatternSyntaxException e) {
@@ -379,20 +418,33 @@ public class Config {
     }
 
 
-    public boolean filter(FuncMetrics fnMetrics) {
-        boolean result = !exclusionFilters.stream().anyMatch(filter -> filter.apply(fnMetrics));
-        if (!result) {
-            logger.debug("Functions metrics from " + fnMetrics.getPathname() + " are filtered out.");
-        }
-        return result;
+  //
+  // ******************************************************************************************************************
+  //
+
+  /**
+   * Applies all filters at the global level to the given pathname and returns true of the file is to be processed.
+   */
+  public boolean filter(FuncMetrics fnMetrics) {
+    boolean result = !exclusionFilters.stream().anyMatch(filter -> filter.apply(fnMetrics));
+    if (!result) {
+      logger.debug("Functions metrics from " + fnMetrics.getPathname() + " are filtered out.");
     }
 
-    public Stream<Defect> check(FuncMetrics fnMetrics) {
-        return enabledCheckers.stream()
-                .filter(checker -> checker.filter(fnMetrics))
-                .map(checker -> checker.check(fnMetrics))
-                .filter(defect -> defect != null);
-    }
+  //
+  // ******************************************************************************************************************
+  //
+
+  /**
+   * Build a stream of the defects generated by the enabled and not filtered out checkers on the given function.
+   */
+  public Stream<Defect> check(FuncMetrics fnMetrics) {
+
+    return enabledCheckers.stream() // List all enabled checkers
+            .filter(checker -> checker.filter(fnMetrics)) // Filter out checkers that doesn't apply to this function
+            .map(checker -> checker.check(fnMetrics)) // Check function's metrics with current
+            .filter(defect -> defect != null); // Filter out null defects
+  }
 
     //
     // ******************************************************************************************************************
@@ -671,7 +723,7 @@ public class Config {
 
                     Utils.getFieldAsText(root, "strip-path", "", s -> setStripPath(s));
 
-                    Utils.getFieldAsStrArray(root, "excluded-files", null, filter -> addFileFilter(filter, true));
+          Utils.getFieldAsStrArray(root, "excluded-files", null, filter -> addFileFilter(filter, true));
 
                     // Before loading the checker configurations we must load the list of available checkers from config dir.
                     if (init()) {

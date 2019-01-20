@@ -15,5 +15,33 @@
       // The default theshold
       "threshold": 200
     }
-  ]
+  ],
+
+  "defect-template": {
+    "checker": "METRICS.LOC_TOO_HIGH",
+    "extra": "metric_violation",
+    "file": "${fileName}",
+    "function": "${funcName}",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "LOC too high",
+      "category": "Code maintainability issues",
+      "impact": "medium",
+      "longDescription": "Writing large functions is harder to maintain. The LOC for this function is ${loc} which is above the threshold ${loc.threshold}.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "LOC metric violation",
+        "file": "$fileName",
+        "linkUrl": "",
+        "linkText": "",
+        "description": "The LOC is ${loc} above ${loc.threshold}.",
+        "line": 0,
+        "main": true
+      }
+    ]
+  }
+
 }

@@ -18,6 +18,14 @@ public class FuncMetrics extends HashMap<String, String> {
     return get("file");
   }
 
+  public String getFunctionName() {
+    return get("functionName");
+  }
+
+  public String getClassName() {
+    return get("className");
+  }
+
   public boolean read(XMLStreamReader xmlsr) {
     boolean result = false;
     try {
@@ -80,6 +88,10 @@ public class FuncMetrics extends HashMap<String, String> {
 
   public boolean parse() {
     boolean result = true;
+
+    // ------------------------------------------------------------------------
+    //  Parse the metrics field from the XML file into a list of metrics
+    // ------------------------------------------------------------------------
     metrics.clear();
     String[] metricsList = get("metrics").split(";");
     for (String metric : metricsList) {
@@ -91,6 +103,35 @@ public class FuncMetrics extends HashMap<String, String> {
         result = false;
       }
     }
+
+    // ------------------------------------------------------------------------
+    //  Parse the function and class names
+    // ------------------------------------------------------------------------
+    String[] names = get("names").split(";");
+    if (names.length > 0) {
+
+      String flagedFn = names[0];
+      if (flagedFn.startsWith("fn:")) {
+        put("functionName", flagedFn.substring(3));
+      } else {
+        logger.error("Unable to extract function name from '" + get("names") + "'");
+      }
+    } else {
+      logger.error("No names defined ? " + get("names"));
+    }
+
+    if (names.length == 2) {
+      String flagedCn = names[1];
+      if (flagedCn.startsWith("cn:")) {
+        put("className", flagedCn.substring(3));
+      } else {
+        logger.error("Unable to extract class name from '" + get("names") + "'");
+      }
+    } else {
+      put("className", "");
+    }
+
+
     return result;
   }
 

@@ -1,6 +1,5 @@
 package com.synopsys.metrics;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -201,6 +200,7 @@ public class Main {
     // ----------------------------------------------------------------------------------------------------------------
     {
       try {
+
         FileOutputStream os = new FileOutputStream("cov-metrics-report.json");
         Writer writer = new OutputStreamWriter(os);
 

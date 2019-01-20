@@ -11,7 +11,8 @@
         "name": "STDOUT",
         "PatternLayout": {
           "pattern": "%d [%t] %-5p %c.%M - %m%n"
-        }
+        },
+        "ThresholdFilter": { "level": "${sys:cov-analyze-metrics.console.level}" }
       },
       "RollingFile": {
         "name":"File",
@@ -20,6 +21,7 @@
         "PatternLayout": {
           "pattern":"%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}.%M:%L - %m%n"
         },
+        "ThresholdFilter": { "level": "${sys:cov-analyze-metrics.file.level:all}" },
         "Policies": {
           "SizeBasedTriggeringPolicy": {
             "size":"10 MB"

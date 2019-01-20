@@ -1,0 +1,23 @@
+#!/bin/bash
+# *****************************************************************************
+# cov-analyze-metrics
+#
+# Launcher script for executable Jar.
+# Author: jean-lin.pacherie@synopsys.com 
+# -----------------------------------------------------------------------------
+# Copyright (c) 2019 by Synopsys, all right reserved. 
+# *****************************************************************************
+
+DIR=$(dirname $0)/..
+if [ ! -d "$DIR" ]; then
+  echo "Error, installation dir not found at $DIR"œ
+  exit -1
+fi
+
+JAR_EXEC=$DIR/target/cov-analyze-metrics-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+if [ ! -f "$JAR_EXEC" ]; then
+  echo "Error, Java archive not found at $JAR_EXEC"
+  exit -1
+fi
+
+java -Dcov-analyze-metrics.console.level=debug -jar $JAR_EXEC $*
