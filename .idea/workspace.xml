@@ -6,21 +6,16 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bc8685d3-ecdc-4086-b36b-9d9767e344c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="bc8685d3-ecdc-4086-b36b-9d9767e344c1" name="Default Changelist" comment="Adding support for:&#10;- Generation of the JSON file for cov-import-results&#10;- Exclusion of source file by regular expressions&#10;- Multiple thresholds per checkers&#10;- Comments in the JSON Configuration file&#10;- many more ...">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/METRICS.LOC_TOO_HIGH.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/METRICS.LOC_TOO_HIGH.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/METRICS.TOO_COMPLEX.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/METRICS.TOO_COMPLEX.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cov-metrics-report.json" beforeDir="false" afterPath="$PROJECT_DIR$/cov-metrics-report.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/checkers/METRICS.CCM_TOO_HIGH.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/METRICS.LOC_TOO_HIGH.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/checkers/METRICS.LOC_TOO_HIGH.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/METRICS.TOO_COMPLEX.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/checkers/METRICS.TOO_COMPLEX.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/default.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/default.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Checker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Checker.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Defect.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Defect.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/FuncMetrics.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/FuncMetrics.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/log4j2.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/log4j2.json" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -35,10 +30,9 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="483">
-              <caret line="185" column="31" selection-start-line="185" selection-start-column="31" selection-end-line="185" selection-end-column="31" />
+            <state relative-caret-position="90">
+              <caret line="6" column="40" selection-start-line="6" selection-start-column="40" selection-end-line="6" selection-end-column="40" />
               <folding>
-                <element signature="imports" expanded="true" />
                 <element signature="method#init#0;class#Main#0" />
                 <element signature="method#getFunctionMetricIter#0;class#Main#0" />
               </folding>
@@ -55,34 +49,29 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="645">
-              <caret line="43" column="9" selection-start-line="43" selection-start-column="9" selection-end-line="43" selection-end-column="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/bin/cov-analyze-metrics.sh">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3003">
-              <caret line="416" selection-start-line="416" selection-end-line="416" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="290">
-              <caret line="548" column="8" selection-start-line="548" selection-start-column="8" selection-end-line="548" selection-end-column="8" />
+            <state relative-caret-position="253">
+              <caret line="200" column="13" selection-start-line="200" selection-start-column="13" selection-end-line="200" selection-end-column="13" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#8934#8935#0" expanded="true" />
-                <element signature="e#8960#8961#0" expanded="true" />
-                <element signature="e#19833#21210#1" />
+                <element signature="e#1853#1862#0" expanded="true" />
+                <element signature="e#1998#2007#0" expanded="true" />
+                <element signature="e#9196#9197#0" expanded="true" />
+                <element signature="e#9246#9247#0" expanded="true" />
+                <element signature="e#9465#9466#0" expanded="true" />
+                <element signature="e#9657#9658#0" expanded="true" />
+                <element signature="e#9744#9745#0" expanded="true" />
+                <element signature="e#9925#9926#0" expanded="true" />
+                <element signature="e#9989#9990#0" expanded="true" />
+                <element signature="e#10184#10185#0" expanded="true" />
+                <element signature="e#10276#10277#0" expanded="true" />
+                <element signature="e#10467#10468#0" expanded="true" />
+                <element signature="e#10551#10552#0" expanded="true" />
+                <element signature="e#10808#10809#0" expanded="true" />
+                <element signature="e#10960#10961#0" expanded="true" />
+                <element signature="e#22061#22896#1" />
               </folding>
             </state>
           </provider>
@@ -94,27 +83,12 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Metrics.java">
+        <entry file="file://$PROJECT_DIR$/pom.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/FuncMetrics.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="123" selection-start-line="123" selection-end-line="123" />
+            <state relative-caret-position="309">
+              <caret line="109" selection-start-line="109" selection-end-line="109" />
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#510#511#0" expanded="true" />
-                <element signature="e#538#539#0" expanded="true" />
-                <element signature="e#575#576#0" expanded="true" />
-                <element signature="e#604#605#0" expanded="true" />
-                <element signature="e#648#649#0" expanded="true" />
-                <element signature="e#684#685#0" expanded="true" />
+                <element signature="n#dependencies#0;n#project#0;n#!!top" />
               </folding>
             </state>
           </provider>
@@ -160,7 +134,6 @@
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/config/default.json" />
         <option value="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Utils.java" />
-        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java" />
         <option value="$PROJECT_DIR$/src/main/resources/log4j2.json" />
         <option value="$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.json" />
@@ -170,6 +143,7 @@
         <option value="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Defect.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/FuncMetrics.java" />
         <option value="$PROJECT_DIR$/cov-metrics-report.json" />
+        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java" />
       </list>
     </option>
@@ -194,17 +168,23 @@
       <expand>
         <path>
           <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="cov-analyze-metrics" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+          <item name="Coverity Metrics Analyzer" type="9519ce18:MavenProjectsStructure$ProjectNode" />
         </path>
         <path>
           <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="cov-analyze-metrics" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+          <item name="Coverity Metrics Analyzer" type="9519ce18:MavenProjectsStructure$ProjectNode" />
           <item name="Lifecycle" type="58874e2:MavenProjectsStructure$LifecycleNode" />
         </path>
         <path>
           <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="cov-analyze-metrics" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+          <item name="Coverity Metrics Analyzer" type="9519ce18:MavenProjectsStructure$ProjectNode" />
           <item name="Plugins" type="7aea1407:MavenProjectsStructure$PluginsNode" />
+        </path>
+        <path>
+          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
+          <item name="Coverity Metrics Analyzer" type="9519ce18:MavenProjectsStructure$ProjectNode" />
+          <item name="Plugins" type="7aea1407:MavenProjectsStructure$PluginsNode" />
+          <item name="compiler" type="36feed69:MavenProjectsStructure$PluginNode" />
         </path>
       </expand>
       <select />
@@ -258,24 +238,13 @@
             <path>
               <item name="cov-analyze-metrics" type="b2602c69:ProjectViewProjectNode" />
               <item name="cov-analyze-metrics" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="target" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="cov-analyze-metrics" type="b2602c69:ProjectViewProjectNode" />
               <item name="cov-analyze-metrics" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="metrics" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="cov-analyze-metrics" type="b2602c69:ProjectViewProjectNode" />
-              <item name="cov-analyze-metrics" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
+              <item name="target" type="462c0819:PsiDirectoryNode" />
+              <item name="classes" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -300,18 +269,22 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1547982161103" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1548068679642" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit5" />
     <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5" value="" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../pmd" />
     <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="MavenSettings" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="CreateTestDialog.RecentsKey">
       <recent name="com.synopsys.metrics" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/resources/checkers" />
+      <recent name="$PROJECT_DIR$/src/main/resources" />
     </key>
     <key name="CreateTestDialog.Recents.Supers">
       <recent name="" />
@@ -355,13 +328,13 @@
       <log_file alias="$PROJECT_DIR$/logs/cov-analyze-metrics.log" path="$PROJECT_DIR$/logs/cov-analyze-metrics.log" />
       <option name="MAIN_CLASS_NAME" value="com.synopsys.metrics.Main" />
       <module name="cov-analyze-metrics" />
-      <option name="PROGRAM_PARAMETERS" value="--config config/default.json --dir $PROJECT_DIR$/../../../../Demos/C/OpenExanodes/build-exanodes/idir --output-tag quality -co METRICS.TOO_COMPLEX:cc:9 -co METRICS.TOO_COMPLEX:loc:9" />
-      <option name="VM_PARAMETERS" value="-Dcov-analyze-metrics.console.level=error" />
+      <option name="PROGRAM_PARAMETERS" value="--dir $PROJECT_DIR$/../../../../Demos/C/OpenExanodes/build-exanodes/idir --output-tag -quality -co METRICS.TOO_COMPLEX:cc:9 -co METRICS.TOO_COMPLEX:loc:9" />
+      <option name="VM_PARAMETERS" value="-Dcov-analyze-metrics.console.level=debug" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ConfigTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="ConfigTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
       <module name="cov-analyze-metrics" />
       <extension name="coverage">
         <pattern>
@@ -453,7 +426,6 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.ConfigTest.load_cli4" />
-        <item itemvalue="JUnit.ConfigTest" />
         <item itemvalue="JUnit.ConfigTest.load_cli3" />
         <item itemvalue="JUnit.ConfigTest.load_cli1" />
         <item itemvalue="JUnit.ConfigTest.load_cli2" />
@@ -524,7 +496,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="61" y="0" width="1988" height="1125" extended-state="6" />
+    <frame x="61" y="0" width="1988" height="1125" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49331352" visible="true" weight="0.2242268" />
@@ -546,12 +518,12 @@
       <window_info anchor="bottom" id="Version Control" order="9" weight="0.32901296" />
       <window_info anchor="bottom" id="Messages" order="10" weight="0.32801595" />
       <window_info anchor="right" id="Palette" order="0" />
-      <window_info active="true" anchor="right" x="1575" y="122" width="416" height="344" id="Structure" order="1" sideWeight="0.61048156" visible="true" weight="0.20979382" />
+      <window_info active="true" anchor="right" x="1575" y="122" width="416" height="344" id="Structure" order="1" sideWeight="0.60682493" visible="true" weight="0.20979382" />
       <window_info anchor="right" id="Ant Build" order="2" weight="0.25" />
       <window_info anchor="right" id="Theme Preview" order="3" />
-      <window_info anchor="right" id="Maven" order="4" sideWeight="0.56031907" weight="0.3298969" />
+      <window_info anchor="right" id="Maven" order="4" sideWeight="0.5563798" weight="0.3298969" />
       <window_info anchor="right" id="Capture Analysis" order="5" />
-      <window_info anchor="right" x="0" y="0" width="447" height="925" id="Documentation" order="6" sideWeight="0.43968096" side_tool="true" visible="true" weight="0.3298969" />
+      <window_info anchor="right" x="0" y="0" width="447" height="925" id="Documentation" order="6" sideWeight="0.39317507" side_tool="true" visible="true" weight="0.20979382" />
       <window_info anchor="right" id="Palette&#9;" order="7" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="8" type="SLIDING" weight="0.4" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="9" weight="0.25" />
@@ -616,12 +588,6 @@
           <line>95</line>
           <properties />
           <option name="timeStamp" value="26" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java</url>
-          <line>604</line>
-          <properties />
-          <option name="timeStamp" value="32" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -758,7 +724,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/default.json">
+    <entry file="file://$PROJECT_DIR$/src/main/resources/default.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="660">
           <caret line="44" column="21" selection-start-line="44" selection-start-column="21" selection-end-line="44" selection-end-column="21" />
@@ -793,16 +759,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
     <entry file="file://$PROJECT_DIR$/target/classes/META-INF/MANIFEST.MF" />
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="66" column="39" selection-start-line="66" selection-start-column="39" selection-end-line="66" selection-end-column="39" />
-          <folding>
-            <element signature="n#dependencies#0;n#project#0;n#!!top" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/logs/cov-analyze-metrics.log">
       <provider selected="true" editor-type-id="LogFileEditorProvider">
         <state relative-caret-position="-1290">
@@ -829,21 +785,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.json">
+    <entry file="file://$PROJECT_DIR$/src/main/resources/checkers/METRICS.CCM_TOO_HIGH.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="399">
           <caret line="32" selection-start-line="32" selection-end-line="32" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/METRICS.LOC_TOO_HIGH.json">
+    <entry file="file://$PROJECT_DIR$/src/main/resources/checkers/METRICS.LOC_TOO_HIGH.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="450">
           <caret line="39" column="63" selection-start-line="39" selection-start-column="63" selection-end-line="39" selection-end-column="63" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/METRICS.TOO_COMPLEX.json">
+    <entry file="file://$PROJECT_DIR$/src/main/resources/checkers/METRICS.TOO_COMPLEX.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="640">
           <caret line="48" column="167" selection-start-line="48" selection-start-column="167" selection-end-line="48" selection-end-column="167" />
@@ -868,20 +824,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
           <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="645">
-          <caret line="43" column="9" selection-start-line="43" selection-start-column="9" selection-end-line="43" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bin/cov-analyze-metrics.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3003">
-          <caret line="416" selection-start-line="416" selection-end-line="416" />
         </state>
       </provider>
     </entry>
@@ -925,6 +867,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/bin/cov-analyze-metrics">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" column="40" selection-start-line="6" selection-start-column="40" selection-end-line="6" selection-end-column="40" />
+          <folding>
+            <element signature="method#init#0;class#Main#0" />
+            <element signature="method#getFunctionMetricIter#0;class#Main#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bin/cov-analyze-metrics.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3003">
+          <caret line="416" selection-start-line="416" selection-end-line="416" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/METRICS.CCM_TOO_HIGH.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="645">
+          <caret line="43" column="9" selection-start-line="43" selection-start-column="9" selection-end-line="43" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/cov-metrics-report.json">
       <provider editor-type-id="LargeFileEditor">
         <state relative-caret-position="-2497">
@@ -937,30 +907,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bin/cov-analyze-metrics">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Main.java">
+    <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="483">
-          <caret line="185" column="31" selection-start-line="185" selection-start-column="31" selection-end-line="185" selection-end-column="31" />
+        <state relative-caret-position="309">
+          <caret line="109" selection-start-line="109" selection-end-line="109" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#init#0;class#Main#0" />
-            <element signature="method#getFunctionMetricIter#0;class#Main#0" />
+            <element signature="n#dependencies#0;n#project#0;n#!!top" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/synopsys/metrics/Config.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
-          <caret line="548" column="8" selection-start-line="548" selection-start-column="8" selection-end-line="548" selection-end-column="8" />
+        <state relative-caret-position="253">
+          <caret line="200" column="13" selection-start-line="200" selection-start-column="13" selection-end-line="200" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#8934#8935#0" expanded="true" />
-            <element signature="e#8960#8961#0" expanded="true" />
-            <element signature="e#19833#21210#1" />
+            <element signature="e#1853#1862#0" expanded="true" />
+            <element signature="e#1998#2007#0" expanded="true" />
+            <element signature="e#9196#9197#0" expanded="true" />
+            <element signature="e#9246#9247#0" expanded="true" />
+            <element signature="e#9465#9466#0" expanded="true" />
+            <element signature="e#9657#9658#0" expanded="true" />
+            <element signature="e#9744#9745#0" expanded="true" />
+            <element signature="e#9925#9926#0" expanded="true" />
+            <element signature="e#9989#9990#0" expanded="true" />
+            <element signature="e#10184#10185#0" expanded="true" />
+            <element signature="e#10276#10277#0" expanded="true" />
+            <element signature="e#10467#10468#0" expanded="true" />
+            <element signature="e#10551#10552#0" expanded="true" />
+            <element signature="e#10808#10809#0" expanded="true" />
+            <element signature="e#10960#10961#0" expanded="true" />
+            <element signature="e#22061#22896#1" />
           </folding>
         </state>
       </provider>
@@ -1043,5 +1021,8 @@
         </settings>
       </state>
     </states>
+  </component>
+  <component name="mavenExecuteGoalHistory">
+    <option value="" />
   </component>
 </project>
