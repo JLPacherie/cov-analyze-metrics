@@ -3,6 +3,7 @@ package com.synopsys.metrics;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.LogManager;
@@ -14,10 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,6 +40,7 @@ public class Config {
     protected String description = "";
     protected String outputTag = "";
     protected String stripPath = "";
+    protected String reportFile = "cov-metrics-report.json";
 
     private Options options = null;
 
@@ -171,10 +170,10 @@ public class Config {
                     .desc("Enable checker metric")
                     .build());
 
-            options.addOption(Option.builder("ot")
+            options.addOption(Option.builder("o")
                     .longOpt("output")
                     .numberOfArgs(1)
-                    .desc("Change the output directory (idir/output{tag}) for the analysis")
+                    .desc("Change the outputfile for the JSON defect report")
                     .build());
 
 
@@ -199,6 +198,12 @@ public class Config {
         formatter.printHelp(printWriter, 80, "cov-analysis-metrics [options] where ", "", getOptions(), 2, 1, "");
         return getStandardBanner() + "\n" + stringWriter.toString();
     }
+
+
+    //
+    // ******************************************************************************************************************
+    //
+
 
     //
     // ******************************************************************************************************************
@@ -231,6 +236,15 @@ public class Config {
                     Checker checker = new Checker(checkerFile);
                     if (checker.isValid()) {
                         availableCheckers.add(checker);
+                        String templateFile = checker.getJsonDefectTemplateFilename();
+                        File f = new File(templateFile);
+                        String template = "";
+                        try {
+                            template = FileUtils.readFileToString(f, "UTF8");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        checker.setJsonDefectTemplate(template);
                     } else {
                         logger.error("Unable to load checker from file " + checkerFile.getAbsolutePath());
                         result = false;
@@ -269,27 +283,53 @@ public class Config {
                         Path jarFile = Paths.get(jar.toString().substring("file:".length()));
                         FileSystem fs = FileSystems.newFileSystem(jarFile, null);
                         DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(folderPath));
+
+                        HashMap<String, InputStream> allStreams = new HashMap<>();
                         for (Path p : directoryStream) {
                             InputStream is = Config.class.getResourceAsStream(p.toString());
-                            Checker checker = new Checker(is);
-                            if (checker.isValid()) {
-                                logger.info("Loading checker definition from " + p.getFileName());
-                                availableCheckers.add(checker);
+                            if (is != null) {
+                                allStreams.put(p.getFileName().toString(), is);
                             } else {
-                                logger.error("Unable to load checker from file " + p.getFileName());
-                                result = false;
+                                logger.debug("Unable to create input stream for path " + p.toString());
                             }
                         }
+
+                        for (HashMap.Entry<String, InputStream> entry : allStreams.entrySet()) {
+                            if (entry.getKey().endsWith(".json")) {
+                                Checker checker = new Checker(entry.getValue());
+                                if (checker.isValid()) {
+                                    String templateFile = checker.getJsonDefectTemplateFilename();
+                                    for (HashMap.Entry<String, InputStream> entry2 : allStreams.entrySet()) {
+                                        if (entry2.getKey().endsWith(templateFile)) {
+                                            String template = "";
+
+                                            try {
+                                                template = IOUtils.toString(entry2.getValue(), "UTF8");
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+
+                                            if ((template != null) && !template.isEmpty()) {
+                                                checker.setJsonDefectTemplate(template);
+                                                availableCheckers.add(checker);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                     } catch (IOException e) {
                         logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
                     }
+
                 }
 
                 //
                 // Load the checkers from a FS directory (classpath as for running in the IDE)
                 //
                 else {
-                    logger.info("Loading  list of known checkers from internal definitions (embedded in jar)");
+                    logger.info("Loading  list of known checkers from internal definitions");
                     try {
                         URL url = Config.class.getResource("/checkers");
                         if (url == null) {
@@ -298,13 +338,28 @@ public class Config {
                         } else {
                             File dir = new File(url.toURI());
                             for (File nextFile : dir.listFiles()) {
-                                Checker checker = new Checker(nextFile);
-                                if (checker.isValid()) {
-                                    logger.info("Loading checker definition from " + nextFile.getName());
-                                    availableCheckers.add(checker);
-                                } else {
-                                    logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
-                                    result = false;
+                                if (nextFile.getPath().endsWith(".json")) {
+                                    Checker checker = new Checker(nextFile);
+                                    if (checker.isValid()) {
+                                        logger.info("Loading checker definition from " + nextFile.getName());
+                                        availableCheckers.add(checker);
+                                        String templateFile = checker.getJsonDefectTemplateFilename();
+                                        URL tURL = Config.class.getResource("/checkers/" + templateFile);
+                                        if (tURL != null) {
+                                            String template = "";
+                                            try {
+                                                template = IOUtils.toString(tURL, "UTF8");
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                            checker.setJsonDefectTemplate(template);
+                                        } else {
+                                            logger.error("Template for defect not found at " + templateFile);
+                                        }
+                                    } else {
+                                        logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
+                                        result = false;
+                                    }
                                 }
                             }
                         }
@@ -333,6 +388,10 @@ public class Config {
     public String getOutputDir() {
         String result = getIDIR() + "/output" + getOutputTag();
         return result;
+    }
+
+    public String getReportFile() {
+        return reportFile;
     }
 
     public String getFunctionsFileName() {
@@ -744,7 +803,7 @@ public class Config {
                         String list = line.getOptionValue("strip-path");
                         setStripPath(list);
                     } else {
-                        logger.info("There's file pathname exclusion patterns.");
+                        logger.info("There's no prefix to strip from file pathnames.");
                     }
                 }
 
@@ -848,6 +907,17 @@ public class Config {
                         logger.error("Bad intermediate directory specified (not a directory) : '" + value + "'");
                         result = false;
                     }
+                }
+
+                // ----------------------------------------------------------------
+                // Updating the location of the Coverity intermediate dir
+                // ----------------------------------------------------------------
+                if (line.hasOption("output")) {
+                    reportFile = line.getOptionValue("output");
+                } else {
+                    logger.error("No output file specified for the report,using default " + reportFile);
+                    result = false;
+
                 }
 
             } catch (ParseException exp) {

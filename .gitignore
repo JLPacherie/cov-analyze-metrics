@@ -11,3 +11,5 @@ out/
 cov-metrics-report\.json
 
 \.idea/workspace\.xml
+
+cov-metrics-report-symfony\.json

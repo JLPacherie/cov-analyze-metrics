@@ -26,31 +26,6 @@
 
   ],
 
-  "defect-template": {
-    "checker": "METRICS.TOO_COMPLEX",
-    "extra": "metric_violation",
-    "file": "${fileName}",
-    "function": "${funcName}",
-    "subcategory": "code_quality",
-    "properties": {
-      "type": "LOC & CCM too high",
-      "category": "Code maintainability issues",
-      "impact": "medium",
-      "longDescription": "Writing large functions with too many branches is harder to maintain.",
-      "localEffect": "Hard to maintain function",
-      "issueKind": "QUALITY"
-    },
-    "events": [
-      {
-        "tag": "LOC & CCM metric violation",
-        "file": "${fileName}",
-        "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
-        "linkText": "Wikipedia on CCM",
-        "description": "The Cyclomatic Complexity Measure (MacCabe) is ${loc} which is above the threshold ${loc.threshold} and the LOC is ${loc} above ${loc.threshold}.",
-        "line": 0,
-        "main": true
-      }
-    ]
-  }
+  "defect-template": "METRICS.TOO_COMPLEX.txt"
 
 }
