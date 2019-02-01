@@ -8,14 +8,16 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.net.URI;
+import java.io.File;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -195,15 +197,7 @@ public class Config {
   // ******************************************************************************************************************
   //
 
-  private Path getFolderPath() throws URISyntaxException, IOException {
-    URI uri = getClass().getClassLoader().getResource("folder").toURI();
-    if ("jar".equals(uri.getScheme())) {
-      FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap(), null);
-      return fileSystem.getPath("path/to/folder/inside/jar");
-    } else {
-      return Paths.get(uri);
-    }
-  }
+
   /**
    * After being loaded, a configuration should be initialized.
    */
@@ -247,7 +241,7 @@ public class Config {
       } else {
         logger.info("Loading  list of known checkers from internal definitions (embedded in jar)");
         try {
-          InputStream is = getClass().getResourceAsStream(url.toURI());
+          InputStream is = getClass().getResourceAsStream(url.toURI().toString());
           File dir = new File(url.toURI());
           for (File nextFile : dir.listFiles()) {
             Checker checker = new Checker(nextFile);
@@ -664,6 +658,24 @@ public class Config {
         }
 
         // ----------------------------------------------------------------
+        // Add exclusion file filters
+        // ----------------------------------------------------------------
+        {
+          if (line.hasOption("exclude-pathname-regex")) {
+            String list = line.getOptionValue("exclude-pathname-regex");
+            String[] patterns = list.split(",");
+            for (String strPattern : patterns) {
+              if (!addFileFilter(strPattern,true)) {
+                logger.error("Unable to add regex pathname filter from '" + strPattern +"'");
+              }
+            }
+          } else {
+            logger.info("There's file pathname exclusion patterns.");
+          }
+        }
+
+
+        // ----------------------------------------------------------------
         // Update the output tag in the intermediate directory
         // ----------------------------------------------------------------
         {
@@ -810,6 +822,7 @@ public class Config {
 
           Utils.getFieldAsText(root, "strip-path", "", s -> setStripPath(s));
 
+          // Add a new exclusion filter for each pattern (delimited by coma)
           Utils.getFieldAsStrArray(root, "excluded-files", null, filter -> addFileFilter(filter, true));
 
           // Before loading the checker configurations we must load the list of available checkers from config dir.
@@ -877,21 +890,4 @@ public class Config {
     return result;
   }
 
-  public boolean save(String jsonFileName) {
-    boolean result = (jsonFileName != null);
-    if (result) {
-      File file = new File(jsonFileName);
-      result = file.exists();
-      if (result) {
-        // Warning on overwriting a configuration file
-      } else {
-        // All fine we can save.
-        result = false;
-        logger.error("Method not yet implemented.");
-      }
-    } else {
-      // No filename is given
-    }
-    return result;
-  }
 }
