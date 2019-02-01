@@ -206,7 +206,7 @@ public class Main {
     {
       try {
 
-        FileOutputStream os = new FileOutputStream("cov-metrics-report.json");
+        FileOutputStream os = new FileOutputStream(config.getReportFile());
         Writer writer = new OutputStreamWriter(os);
 
 

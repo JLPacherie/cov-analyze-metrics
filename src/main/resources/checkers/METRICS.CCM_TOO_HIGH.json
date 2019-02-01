@@ -17,30 +17,5 @@
     }
   ],
 
-  "defect-template": {
-    "checker": "METRICS.CCM_TOO_HIGH",
-    "extra": "metric_violation",
-    "file": "${fileName}",
-    "function": "${funcName}",
-    "subcategory": "code_quality",
-    "properties": {
-      "type": "CCM too high",
-      "category": "Code maintainability issues",
-      "impact": "low",
-      "longDescription": "Writing functions with too many branches is harder to maintain. The Cyclomatic Complexity Measure (MacCabe) for this function is ${ccm} which is above the threshold ${ccm.threshold}.",
-      "localEffect": "Hard to maintain function",
-      "issueKind": "QUALITY"
-    },
-    "events": [
-      {
-        "tag": "CCM metric violation",
-        "file": "${fileName}",
-        "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
-        "linkText": "Wikipedia on CCM",
-        "description": "The Cyclomatic Complexity Measure (MacCabe) is ${ccm} which is above the threshold ${ccm.threshold}.",
-        "line": 0,
-        "main": true
-      }
-    ]
-  }
+  "defect-template": "METRICS.CCM_TOO_HIGH.txt"
 }
