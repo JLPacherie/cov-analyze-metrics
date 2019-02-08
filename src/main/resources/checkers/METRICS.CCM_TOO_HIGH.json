@@ -13,7 +13,7 @@
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
       "metrics": "cc",
       // The default theshold
-      "threshold": 12
+      "threshold": 20
     }
   ],
 

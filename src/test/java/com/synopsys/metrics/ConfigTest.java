@@ -184,17 +184,5 @@ class ConfigTest {
   // ******************************************************************************************************************
   //
 
-  @org.junit.jupiter.api.Test
-  void save() {
-    Config config = new Config();
-
-    // We can't load a configuration from an undefined file
-    assertFalse(config.save(null), "JSON Configuration can't be saved to an undefined file ");
-
-    // We can't load a configuration from an missing file
-    assertFalse(config.save(""), "JSON Configuration can't be saved to an invalid pathname ");
-    assertFalse(config.save("/invalidpath"), "JSON Configuration can't be saved to an invalid pathname ");
-  }
-
 
 }

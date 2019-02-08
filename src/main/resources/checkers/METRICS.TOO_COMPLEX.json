@@ -13,7 +13,7 @@
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
       "metrics": "cc",
       // The default theshold
-      "threshold": 12
+      "threshold": 20
     },
     {
       // The name of the theshold the user can adjust from the CLI
@@ -21,7 +21,7 @@
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
       "metrics": "lc",
       // The default theshold
-      "threshold": 260
+      "threshold": 300
     }
 
   ],

@@ -61,6 +61,7 @@ public class Main {
 
       final XMLStreamReader xmlsr = xmlif.createXMLStreamReader(xmlInput);
 
+      final String stripPath  = config.getStripPath();
 
       return new Iterator<FuncMetrics>() {
 
@@ -94,6 +95,10 @@ public class Main {
           boolean loaded = result.read(xmlsr);
           while (!loaded && hasNext()) {
             loaded = result.read(xmlsr);
+          }
+
+          if ((loaded) && (!stripPath.isEmpty()) && result.getPathname().startsWith(stripPath)) {
+            result.setPathname(result.getPathname().substring(stripPath.length()));
           }
           return loaded ? result : null;
         }

@@ -15,7 +15,7 @@ public class Utils {
 
     private static ObjectMapper sMapper = null;
 
-    private static ObjectMapper getObjectMapper() {
+    public static ObjectMapper getObjectMapper() {
         if (sMapper == null) {
             sMapper = new ObjectMapper();
             sMapper.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);

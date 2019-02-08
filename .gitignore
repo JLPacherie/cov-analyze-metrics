@@ -7,3 +7,7 @@ target/
 out/
 
 .idea/libraries/*.xml
+
+cov-metrics-report\.json
+
+\.idea/workspace\.xml

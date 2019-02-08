@@ -1,8 +1,13 @@
 package com.synopsys.metrics;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.List;
 
 public class Defect {
+
+  protected Logger logger = LogManager.getLogger(Config.class);
 
   protected Checker checker;
   protected FuncMetrics funcMetrics;
@@ -36,39 +41,44 @@ public class Defect {
   public String getJson() {
     String result = checker.getJsonDefectTemplate();
 
-    //  TODO Strip filenaes ?
-    result = result.replaceAll("\\$\\{fileName\\}",funcMetrics.getPathname());
+    try {
+      //  TODO Strip filenaes ?
 
-    result = result.replaceAll("\\$\\{funcName\\}",funcMetrics.getFunctionName());
+      result = result.replace("${fileName}", funcMetrics.getPathname());
 
-    result = result.replaceAll("\\$\\{className\\}",funcMetrics.getClassName());
+      result = result.replace("${funcName}", funcMetrics.getFunctionName());
 
-    for (String key : funcMetrics.keySet()) {
-      result = result.replaceAll( "\\$\\{" + key + "\\}",funcMetrics.get(key));
-    }
+      result = result.replace("${className}", funcMetrics.getClassName());
 
-    for (String metric : funcMetrics.metrics.keySet()) {
-      Metrics m = checker.getMetric(metric);
-      if (m !=null) {
-
-        result = result.replaceAll("\\$\\{" + m.name + ".threshold\\}",
-                Double2String(checker.getThreshold(metric)));
-
-        result = result.replaceAll("\\$\\{" + m.metric + ".threshold\\}",
-                Double2String(checker.getThreshold(metric)));
-
-        result = result.replaceAll("\\$\\{" + m.name + "\\}",
-                Double2String(funcMetrics.getMetric(m.metric)));
-
-        result = result.replaceAll("\\$\\{" + m.metric + "\\}",
-                Double2String(funcMetrics.getMetric(m.metric)));
-
-        result = result.replaceAll("\\$\\{" + m.name + "\\}",
-                Double2String(funcMetrics.getMetric(m.metric)));
+      for (String key : funcMetrics.keySet()) {
+        result = result.replace("${" + key + "}", funcMetrics.get(key));
       }
 
-    }
+      for (String metric : funcMetrics.metrics.keySet()) {
+        Metrics m = checker.getMetric(metric);
+        if (m != null) {
 
+          result = result.replace("${" + m.name + ".threshold}",
+                  Double2String(checker.getThreshold(metric)));
+
+          result = result.replace("${" + m.metric + ".threshold}",
+                  Double2String(checker.getThreshold(metric)));
+
+          result = result.replace("${" + m.name + "}",
+                  Double2String(funcMetrics.getMetric(m.metric)));
+
+          result = result.replace("${" + m.metric + "}",
+                  Double2String(funcMetrics.getMetric(m.metric)));
+
+          result = result.replace("${" + m.name + "}",
+                  Double2String(funcMetrics.getMetric(m.metric)));
+        }
+
+      }
+    } catch (Exception e) {
+      logger.error("Unable to process Defect template.");
+
+    }
     return result;
   }
 

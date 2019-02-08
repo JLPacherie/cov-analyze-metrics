@@ -18,6 +18,9 @@ public class FuncMetrics extends HashMap<String, String> {
     return get("file");
   }
 
+  public void setPathname(String value) {
+    put("file",value);
+  }
   public String getFunctionName() {
     return get("functionName");
   }
