@@ -133,9 +133,10 @@ public class Main {
   public static void main(String[] args) {
 
     logger.info("");
-    logger.info("*************************************");
-    logger.info("** Stating new execution from here **");
-    logger.info("*************************************");
+    logger.info("**************************************");
+    logger.info("** Starting new execution from here **");
+    logger.info("**************************************");
+    logger.info("");
 
     if ((args == null) || args.length == 0) {
       logger.error("Unable to execute without command line arguments.");
