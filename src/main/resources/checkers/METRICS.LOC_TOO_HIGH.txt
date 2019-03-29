@@ -16,8 +16,6 @@
       {
         "tag": "LOC metric violation",
         "file": "${fileName}",
-        "linkUrl": "",
-        "linkText": "",
         "description": "The LOC is ${loc} above ${loc.threshold}.",
         "line": ${ml},
         "main": true

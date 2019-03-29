@@ -11,3 +11,5 @@ out/
 \.idea/workspace\.xml
 
 cov-analyze-metrics\.iml
+
+\.settings/
