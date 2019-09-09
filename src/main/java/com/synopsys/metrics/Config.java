@@ -205,12 +205,12 @@ public class Config {
 			}
 		}
 
-		// 
+		//
 		// A configuration can also be initialized from the resources embedded in the application
 		// Jar file. This is a bit motre tricky because the way that resources can be accessed at
 		// runtime depends if we are debugging or running from a packaged Jar file.
 		//
-		
+
 		else {
 			String folderPath = "/checkers";
 			URI uri = null;
@@ -581,6 +581,8 @@ public class Config {
 	public boolean isValid() {
 		boolean result = true;
 
+		logger.info("Checking current configuration ...");
+
 		// ----------------------------------------
 		// Validate the Intermediate Directory
 		// ----------------------------------------
@@ -601,28 +603,38 @@ public class Config {
 
 		{
 			String targetPath = getOutputDir();
-
-			File outputDir = new File(targetPath);
-			if (!outputDir.isDirectory()) {
-				logger.error("Coverity output directory not found at '" + targetPath + "'");
-				result = false;
-			} else if (!outputDir.canWrite()) {
-				logger.error("Write access permission denied on Coverity output directory at '" + targetPath + "'");
+			if (targetPath != null) {
+				File outputDir = new File(targetPath);
+				if (!outputDir.isDirectory()) {
+					logger.error("Coverity output directory not found at '" + targetPath + "'");
+					result = false;
+				} else if (!outputDir.canWrite()) {
+					logger.error("Write access permission denied on Coverity output directory at '" + targetPath + "'");
+					result = false;
+				}
+			} else {
+				logger.error("Coverity output directory not defined.");
 				result = false;
 			}
 		}
 
 		{
-			File functions = new File(getFunctionsFileName());
-			if (!functions.isFile()) {
-				logger.error("The provided intermediate directory doesn't contain a metrics file.");
-				result = false;
-			} else if (!functions.canRead()) {
-				logger.error("Access permission defined for the metrics file.");
+			String fnName = getFunctionsFileName();
+			if (fnName != null) {
+				File functions = new File(fnName);
+				if (!functions.isFile()) {
+					logger.error("The provided intermediate directory doesn't contain a metrics file.");
+					result = false;
+				} else if (!functions.canRead()) {
+					logger.error("Access permission defined for the metrics file.");
+					result = false;
+				}
+			} else {
+				logger.error("No function metrics file defined.");
 				result = false;
 			}
-
 		}
+		
 		// ----------------------------------------
 		// Validate the Enabled Checker list.
 		// ----------------------------------------
