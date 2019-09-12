@@ -290,28 +290,31 @@ public class Config {
 							result = false;
 						} else {
 							File dir = new File(url.toURI());
-							for (File nextFile : dir.listFiles()) {
-								if (nextFile.getPath().endsWith(".json")) {
-									Checker checker = new Checker(nextFile);
-									if (checker.isValid()) {
-										logger.info("Loading checker definition from " + nextFile.getName());
-										availableCheckers.add(checker);
-										String templateFile = checker.getJsonDefectTemplateFilename();
-										URL tURL = Config.class.getResource("/checkers/" + templateFile);
-										if (tURL != null) {
-											String template = "";
-											try {
-												template = IOUtils.toString(tURL, "UTF8");
-											} catch (IOException e) {
-												e.printStackTrace();
+							File listFiles[] = dir.listFiles();
+							if (listFiles != null) {
+								for (File nextFile : listFiles) {
+									if (nextFile.getPath().endsWith(".json")) {
+										Checker checker = new Checker(nextFile);
+										if (checker.isValid()) {
+											logger.info("Loading checker definition from " + nextFile.getName());
+											availableCheckers.add(checker);
+											String templateFile = checker.getJsonDefectTemplateFilename();
+											URL tURL = Config.class.getResource("/checkers/" + templateFile);
+											if (tURL != null) {
+												String template = "";
+												try {
+													template = IOUtils.toString(tURL, "UTF8");
+												} catch (IOException e) {
+													e.printStackTrace();
+												}
+												checker.setJsonDefectTemplate(template);
+											} else {
+												logger.error("Template for defect not found at " + templateFile);
 											}
-											checker.setJsonDefectTemplate(template);
 										} else {
-											logger.error("Template for defect not found at " + templateFile);
+											logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
+											result = false;
 										}
-									} else {
-										logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
-										result = false;
 									}
 								}
 							}
@@ -634,7 +637,7 @@ public class Config {
 				result = false;
 			}
 		}
-		
+
 		// ----------------------------------------
 		// Validate the Enabled Checker list.
 		// ----------------------------------------
