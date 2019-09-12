@@ -23,6 +23,11 @@ public class Main {
   protected static Logger logger = LogManager.getLogger(Main.class);
   protected Config config;
 
+  public void MySuperBuggyMethod() {
+  	String str = null;
+  	String substr = str.substring(4);
+  }
+  
   public boolean init(String[] args) {
     logger.info("Creating a new configuration from the CLI options.");
     config = new Config(args);
