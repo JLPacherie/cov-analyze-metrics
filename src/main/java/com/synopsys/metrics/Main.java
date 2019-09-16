@@ -1,34 +1,77 @@
 package com.synopsys.metrics;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import static java.util.stream.Collectors.joining;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.SequenceInputStream;
+import java.io.Writer;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 
-import static java.util.stream.Collectors.joining;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Main {
 
   protected static Logger logger = LogManager.getLogger(Main.class);
   protected Config config;
 
-  public void MySuperBuggyMethod() {
-  	String str = null;
-  	String substr = str.substring(4);
+  public void explicitNullDereference() {
+    String str = null;
+    String substr = str.substring(4);
   }
-  
+
+  public void osCommandInjectionSink(String[] args) {
+    try {
+      Runtime runtime = Runtime.getRuntime();
+      Process proc = runtime.exec("find" + " " + args[0]);
+
+      InputStream is = proc.getInputStream();
+      InputStreamReader isr = new InputStreamReader(is,"UTF-8");
+      BufferedReader br = new BufferedReader(isr);
+
+      String line;
+      while ((line = br.readLine()) != null) {
+        System.out.println(line);
+      }
+    } catch (IOException e) {
+
+    }
+  }
+
+  public void osCommandInjection(String[] args) {
+    String[] localArgs = { "Hello World" , "No Issue There"};
+    osCommandInjectionSink(localArgs);
+    
+    osCommandInjectionSink(args);
+  }
   public boolean init(String[] args) {
+    // ************************************
+    // BUG
+    // ************************************
+    osCommandInjection(args);
+    
     logger.info("Creating a new configuration from the CLI options.");
     config = new Config(args);
 
@@ -46,7 +89,6 @@ public class Main {
 
     return true;
   }
-
 
   public Iterator<FuncMetrics> getFunctionMetricIter(String filename) {
 
@@ -66,10 +108,9 @@ public class Main {
 
       final XMLStreamReader xmlsr = xmlif.createXMLStreamReader(xmlInput);
 
-      final String stripPath  = config.getStripPath();
+      final String stripPath = config.getStripPath();
 
       return new Iterator<FuncMetrics>() {
-
 
         @Override
         /** Move to the next fnmetrics tag or fails */
@@ -82,8 +123,7 @@ public class Main {
               result = false;
               while (!result && xmlsr.hasNext()) {
                 int eventType = xmlsr.next();
-                result = eventType == XMLEvent.START_ELEMENT &&
-                        "fnmetric".equals(xmlsr.getName().getLocalPart());
+                result = eventType == XMLEvent.START_ELEMENT && "fnmetric".equals(xmlsr.getName().getLocalPart());
               }
             }
           } catch (XMLStreamException e) {
@@ -109,7 +149,7 @@ public class Main {
         }
       }
 
-              ;
+      ;
 
     } catch (FileNotFoundException e) {
       e.printStackTrace();
@@ -128,10 +168,7 @@ public class Main {
 
     Iterator<FuncMetrics> iter = getFunctionMetricIter(filename);
 
-    return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(iter, 0),
-            true
-    ).filter(fm -> fm.parse());
+    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iter, 0), true).filter(fm -> fm.parse());
 
   }
 
@@ -148,7 +185,6 @@ public class Main {
       return;
     }
 
-
     logger.info("Command line arguments:");
     for (String opt : args) {
       logger.info("'" + opt + "'");
@@ -164,11 +200,9 @@ public class Main {
     // ----------------------------------------------------------------------------------------------------------------
     // Collecting defect results.
     // ----------------------------------------------------------------------------------------------------------------
-    List<Defect> defects = main.getParsedStream(config.getFunctionsFileName())
-            .parallel()
-            .filter(fnMetrics -> config.filter(fnMetrics))
-            .flatMap(fnmetrics -> config.check(fnmetrics))
-            .collect(Collectors.toList());
+    List<Defect> defects = main.getParsedStream(config.getFunctionsFileName()).parallel()
+        .filter(fnMetrics -> config.filter(fnMetrics)).flatMap(fnmetrics -> config.check(fnmetrics))
+        .collect(Collectors.toList());
 
     // ----------------------------------------------------------------------------------------------------------------
     // Counts results by checker
@@ -182,9 +216,8 @@ public class Main {
 
       System.out.println("Defects count by checker");
 
-      countBy.entrySet().stream()
-              .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-              .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
+      countBy.entrySet().stream().sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+          .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
 
     }
 
@@ -199,9 +232,8 @@ public class Main {
       }
 
       System.out.println("Defects count by file");
-      countBy.entrySet().stream()
-              .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-              .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
+      countBy.entrySet().stream().sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+          .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
     }
 
     logger.info("Found " + defects.size() + " defects.");
@@ -215,22 +247,15 @@ public class Main {
         FileOutputStream os = new FileOutputStream(config.getReportFile());
         Writer writer = new OutputStreamWriter(os);
 
-
-        writer.write("\n" +
-                "{\n" +
-                "\t\"header\" : {\n" +
-                "\t\t\"version\" : 1,\n" +
-                "\t\t\"format\" : \"cov-import-results input\" \n" +
-                "\t},\n" +
-                "\t\n" +
-                "\t\"issues\": [\n");
-
+        writer.write("\n" + "{\n" + "\t\"header\" : {\n" + "\t\t\"version\" : 1,\n"
+            + "\t\t\"format\" : \"cov-import-results input\" \n" + "\t},\n" + "\t\n" + "\t\"issues\": [\n");
 
         boolean first = true;
         for (int iDefect = 0; iDefect < defects.size(); iDefect++) {
           String json = defects.get(iDefect).getJson();
           if (json != null) {
-            if (!first) writer.write(",\n");
+            if (!first)
+              writer.write(",\n");
             writer.write("\t\t");
             writer.write(json);
             first = false;
@@ -240,14 +265,10 @@ public class Main {
         }
 
         // End of JSON segments for defects and beginning of the array for source files.
-        writer.write("\n\t],\n" +
-                "\t\"sources\": [\n");
+        writer.write("\n\t],\n" + "\t\"sources\": [\n");
 
-        String json = defects.stream()
-                .map(defect -> defect.funcMetrics.getPathname())
-                .distinct()
-                .map(path -> "\t\t{ \"file\": \"" + path + "\", \"encoding\": \"ASCII\" }")
-                .collect(joining(",\n"));
+        String json = defects.stream().map(defect -> defect.funcMetrics.getPathname()).distinct()
+            .map(path -> "\t\t{ \"file\": \"" + path + "\", \"encoding\": \"ASCII\" }").collect(joining(",\n"));
 
         writer.write(json);
 
