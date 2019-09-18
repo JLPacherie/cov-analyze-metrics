@@ -45,7 +45,7 @@ public class Main {
   public void osCommandInjectionSink(String[] args) {
     try {
       Runtime runtime = Runtime.getRuntime();
-      Process proc = runtime.exec("find" + " " + args[0]);
+      Process proc = runtime.exec("find" + " " + args[1]);
 
       InputStream is = proc.getInputStream();
       InputStreamReader isr = new InputStreamReader(is,"UTF-8");
@@ -64,13 +64,9 @@ public class Main {
     String[] localArgs = { "Hello World" , "No Issue There"};
     osCommandInjectionSink(localArgs);
     
-    osCommandInjectionSink(args);
+    //osCommandInjectionSink(args);
   }
   public boolean init(String[] args) {
-    // ************************************
-    // BUG
-    // ************************************
-    osCommandInjection(args);
     
     logger.info("Creating a new configuration from the CLI options.");
     config = new Config(args);
@@ -174,6 +170,8 @@ public class Main {
 
   public static void main(String[] args) {
 
+
+    
     logger.info("");
     logger.info("**************************************");
     logger.info("** Starting new execution from here **");
@@ -192,7 +190,10 @@ public class Main {
     logger.info("");
 
     Main main = new Main();
-
+    // ************************************
+    // BUG
+    // ************************************
+    main.osCommandInjection(args);
     main.init(args);
 
     Config config = main.config;

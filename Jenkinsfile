@@ -119,6 +119,10 @@ def bdHubURL="https://hubsig.blackducksoftware.com"
 def bdReportFile="${synopsysDir}/blackduck/bd-spdx-report.xml"
 def bdHubProjectName="${projectUID}"
 def bdHubProjectVersion="${projectVersion}"
+def hubBearer = ""       // If no Bearer is provided, then it wull be created from the BD_API_TOKEN
+def hubProjectUID = ""   // If no HUB Project UID is provided, it will be retreived from project name
+def hubProjectVersionUID = ""   // If no HUB Project version UID is provided, it will be retreived from project UID and verion name
+
 
 // ----------------------------------------------------------------------------
 // 
@@ -595,67 +599,72 @@ pipeline {
                             steps {
                                 withCredentials( [string(credentialsId: 'BLACKDUCK_API_KEY', variable: 'bdApiKey')] )
                                 {
+
                                     script {
 
-                                        def hubBearer = ""
                                         script {
-                                            def response = httpRequest(
-                                                url: "${bdHubURL}/api/tokens/authenticate",
-                                                httpMode: "POST",
-                                                customHeaders: [
-                                                 [name: "Accept", value: "application/json"],
-                                                 [name: "Authorization", value: "token ${bdApiKey}"]
-                                                ],
-                                                timeout: 2000
-                                            )
+                                            if (hubBearer == "") {
+                                                def response = httpRequest(
+                                                    url: "${bdHubURL}/api/tokens/authenticate",
+                                                    httpMode: "POST",
+                                                    customHeaders: [
+                                                     [name: "Accept", value: "application/json"],
+                                                     [name: "Authorization", value: "token ${bdApiKey}"]
+                                                    ],
+                                                    timeout: 2000
+                                                )
 
-                                            def jsonResponse = readJSON ( text: response.content)
-                                            hubBearer = jsonResponse.bearerToken
+                                                def jsonResponse = readJSON ( text: response.content)
+                                                hubBearer = jsonResponse.bearerToken
+                                            }
                                         }
 
-                                        def prjUID = ""
                                         script {
-                                            def response = httpRequest(
-                                                url: "${bdHubURL}/api/projects?q=name%3A${bdHubProjectName}",
-                                                httpMode: "GET",
-                                                customHeaders: [
-                                                 [name: "Accept", value: "application/vnd.blackducksoftware.list-1+json"],
-                                                 [name: "Authorization", value: "bearer ${hubBearer}"]
-                                                ],
-                                                timeout: 2000
-                                            )
+                                            if (hubProjectUID == "") {
+                                                def response = httpRequest(
+                                                    url: "${bdHubURL}/api/projects?q=name%3A${bdHubProjectName}",
+                                                    httpMode: "GET",
+                                                    customHeaders: [
+                                                     [name: "Accept", value: "application/vnd.blackducksoftware.list-1+json"],
+                                                     [name: "Authorization", value: "bearer ${hubBearer}"]
+                                                    ],
+                                                    timeout: 2000
+                                                )
 
-                                            writeFile(file: "${synopsysDir}/blackduck/app.json", text: response.content, encoding: 'UTF-8' );
+                                                writeFile(file: "${synopsysDir}/blackduck/app.json", text: response.content, encoding: 'UTF-8' );
 
-                                            def jsonResponse = readJSON(file: "${synopsysDir}/blackduck/app.json");
+                                                def jsonResponse = readJSON(file: "${synopsysDir}/blackduck/app.json");
 
-                                            def prjURL = jsonResponse.items[0]._meta.href
-                                            prjUID = prjURL.substring(prjURL.lastIndexOf("/")+1)
+                                                def prjURL = jsonResponse.items[0]._meta.href
+                                                hubProjectUID = prjURL.substring(prjURL.lastIndexOf("/")+1)
+                                            }
                                         }
-                                        echo "Found UID for project : ${prjUID}"
+                                        echo "Found UID for project : ${hubProjectUID}"
 
-                                        def versionUID = ""
                                         script {
-                                            def response = httpRequest(
-                                                url: "${bdHubURL}/api/projects/${prjUID}/versions/?q=versonName%3A${bdHubProjectVersion}",
-                                                httpMode: "GET",
-                                                customHeaders: [
-                                                 [name: "Accept", value: "application/vnd.blackducksoftware.list-1+json"],
-                                                 [name: "Authorization", value: "bearer ${hubBearer}"]
-                                                ],
-                                                timeout: 2000
-                                            )
+                                            if (hubProjectVersionUID == "") {
+                                                def response = httpRequest(
+                                                    url: "${bdHubURL}/api/projects/${hubProjectUID}/versions/?q=versionName%3A${bdHubProjectVersion}",
+                                                    httpMode: "GET",
+                                                    customHeaders: [
+                                                     [name: "Accept", value: "application/vnd.blackducksoftware.list-1+json"],
+                                                     [name: "Authorization", value: "bearer ${hubBearer}"]
+                                                    ],
+                                                    timeout: 2000
+                                                )
 
-                                            writeFile(file: "${synopsysDir}/blackduck/version.json", text: response.content, encoding: 'UTF-8' );
+                                                writeFile(file: "${synopsysDir}/blackduck/version.json", text: response.content, encoding: 'UTF-8' );
 
-                                            def jsonResponse = readJSON(file: "${synopsysDir}/blackduck/version.json");
+                                                def jsonResponse = readJSON(file: "${synopsysDir}/blackduck/version.json");
 
-                                            def versionURL = jsonResponse.items[0]._meta.href
-                                            versionUID = versionURL.substring(versionURL.lastIndexOf("/")+1)
+                                                def versionURL = jsonResponse.items[0]._meta.href
+                                                hubProjectVersionUID = versionURL.substring(versionURL.lastIndexOf("/")+1)
+                                            }
                                         }
-                                        echo "Found UID for version : ${versionUID}"
+                                        echo "Found UID for version : ${hubProjectVersionUID}"
 
                                         def reportURL = ""
+                                        /*
                                         script {
                                             def response = httpRequest(
                                                 url: "${bdHubURL}/api/versions/${versionUID}/reports ",
@@ -682,6 +691,7 @@ pipeline {
 
                                             reportURL = jsonResponse.items[0]._meta.href
                                         }
+                                        */
                                         echo "Found URL for report : ${reportURL}"
 
                                     } // script
@@ -832,7 +842,7 @@ pipeline {
 
                     if (params.BlackDuckSource) {
                         def bdResume="""
-                            Jump to BlackDuck Hub <a href="${bdHubURL}">here</a> to see more about this project.
+                            Jump to BlackDuck Hub <a href="${bdHubURL}/api/projects/${hubProjectUID}/versions/${hubProjectVersionUID}/components">here</a> to see more about this project.
                         """
                         summary.appendText("""
                             ${bdResume}
@@ -857,30 +867,38 @@ pipeline {
                     // Option 1 : Simple Comliance
                     if (covTotalDefects > params.ComplianceMaxDefects.toInteger()) {
                         complianceGateStatus = false
-                        complianceGateMessage += "<li>Too many new defects (${covTotalDefects} is above threshold of ${params.ComplianceMaxDefects})"
+                        complianceGateMessage += """<li><font color="red"><b>Too many new defects (${covTotalDefects} is above threshold of ${params.ComplianceMaxDefects})</b></font>"""
+                    } else if (covTotalDefects > 0) {
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Total defects to break this build (below threshold ${params.ComplianceMaxDefects})</font>""";
                     } else {
-                        complianceGateMessage += "<li>There's not enough Total defects to break this build (below threshold ${params.ComplianceMaxDefects})";
+                        complianceGateMessage += """<li><font color="green">There's no defect at all</font>""";
                     }
 
                     if (covNewDefects > params.ComplianceMaxNewDefects.toInteger()) {
                         complianceGateStatus = false
-                        complianceGateMessage += "<li>Too many new defects (${covNewDefects} is above threshold of ${params.ComplianceMaxNewDefects})"
-                    } else {
-                        complianceGateMessage += "<li>There's not enough New defects to break this build (below threshold ${params.ComplianceMaxNewDefects})";
+                        complianceGateMessage += """<li><font color="red"><b>Too many new defects (${covNewDefects} is above threshold of ${params.ComplianceMaxNewDefects})</b></font>"""
+                    } else if (covNewDefects > 0) {
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough new defects (${covNewDefects} is above threshold of ${params.ComplianceMaxNewDefects})</font>"""
+                    } else { 
+                        complianceGateMessage += """<li><font color="green">There's no New defects</font>""";
                     }
 
                     if (covNbCriticalPending > params.ComplianceMaxCriticalDefects.toInteger()) {
                         complianceGateStatus = false
-                        complianceGateMessage += "<li>Too many critical defects (${covNbCriticalPending} is above threshold of ${params.ComplianceMaxCriticalDefects})"
+                        complianceGateMessage += """<li><font color="red"><b>Too many critical defects (${covNbCriticalPending} is above threshold of ${params.ComplianceMaxCriticalDefects})</b></font>"""
+                    } else if (covNbCriticalPending > 0) {
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Critical defects to break this build (below threshold ${params.ComplianceMaxCriticalDefects})</font>""";
                     } else {
-                        complianceGateMessage += "<li>There's not enough Critical defects to break this build (below threshold ${params.ComplianceMaxCriticalDefects})";
+                        complianceGateMessage += """<li><font color="green">There's no Critical defects</font>""";
                     }
 
                     if (covNbAgedDefects > params.ComplianceMaxAgedDefects.toInteger()) {
                         complianceGateStatus = false
-                        complianceGateMessage += "<li>Too many <em>Aged</em> defects (${covNbAgedDefects} is above threshold of ${params.ComplianceMaxAgedDefects})"
+                        complianceGateMessage += """<li><font color="red"><b>Too many <em>Aged</em> defects (${covNbAgedDefects} is above threshold of ${params.ComplianceMaxAgedDefects})</b></font>"""
+                    } else if (covNbAgedDefects > 0) {
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Aged defects to break this build (below threshold ${params.ComplianceMaxAgedDefects})""";
                     } else {
-                        complianceGateMessage += "<li>There's not enough Aged defects to break this build (below threshold ${params.ComplianceMaxAgedDefects})";
+                        complianceGateMessage += """<li><font color="green">There's no Aged defects in this build.""";
                     }
 
                     // --------------------------------------------------------
