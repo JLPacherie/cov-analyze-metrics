@@ -842,7 +842,7 @@ pipeline {
 
                     if (params.BlackDuckSource) {
                         def bdResume="""
-                            Jump to BlackDuck Hub <a href="${bdHubURL}/api/projects/${hubProjectUID}/versions/${hubProjectVersionUID}/components">here</a> to see more about this project.
+                            Jump to BlackDuck Hub <a href="${bdHubURL}/api/projects/${hubProjectUID}/versions/${hubProjectVersionUID}/components" target="_blank" >here</a> to see more about this project.
                         """
                         summary.appendText("""
                             ${bdResume}
