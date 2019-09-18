@@ -869,7 +869,7 @@ pipeline {
                         complianceGateStatus = false
                         complianceGateMessage += """<li><font color="red"><b>Too many new defects (${covTotalDefects} is above threshold of ${params.ComplianceMaxDefects})</b></font>"""
                     } else if (covTotalDefects > 0) {
-                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Total defects to break this build (below threshold ${params.ComplianceMaxDefects})</font>""";
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Total defects to break this build (${covTotalDefects} is below threshold ${params.ComplianceMaxDefects})</font>""";
                     } else {
                         complianceGateMessage += """<li><font color="green">There's no defect at all</font>""";
                     }
@@ -878,7 +878,7 @@ pipeline {
                         complianceGateStatus = false
                         complianceGateMessage += """<li><font color="red"><b>Too many new defects (${covNewDefects} is above threshold of ${params.ComplianceMaxNewDefects})</b></font>"""
                     } else if (covNewDefects > 0) {
-                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough new defects (${covNewDefects} is above threshold of ${params.ComplianceMaxNewDefects})</font>"""
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough new defects (${covNewDefects} is below threshold of ${params.ComplianceMaxNewDefects})</font>"""
                     } else { 
                         complianceGateMessage += """<li><font color="green">There's no New defects</font>""";
                     }
@@ -887,7 +887,7 @@ pipeline {
                         complianceGateStatus = false
                         complianceGateMessage += """<li><font color="red"><b>Too many critical defects (${covNbCriticalPending} is above threshold of ${params.ComplianceMaxCriticalDefects})</b></font>"""
                     } else if (covNbCriticalPending > 0) {
-                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Critical defects to break this build (below threshold ${params.ComplianceMaxCriticalDefects})</font>""";
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Critical defects to break this build (${covNbCriticalPending} is below threshold ${params.ComplianceMaxCriticalDefects})</font>""";
                     } else {
                         complianceGateMessage += """<li><font color="green">There's no Critical defects</font>""";
                     }
@@ -896,7 +896,7 @@ pipeline {
                         complianceGateStatus = false
                         complianceGateMessage += """<li><font color="red"><b>Too many <em>Aged</em> defects (${covNbAgedDefects} is above threshold of ${params.ComplianceMaxAgedDefects})</b></font>"""
                     } else if (covNbAgedDefects > 0) {
-                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Aged defects to break this build (below threshold ${params.ComplianceMaxAgedDefects})""";
+                        complianceGateMessage += """<li><font color="#FF8C00">There's not enough Aged defects to break this build (${covNbAgedDefects} is below threshold ${params.ComplianceMaxAgedDefects})""";
                     } else {
                         complianceGateMessage += """<li><font color="green">There's no Aged defects in this build.""";
                     }

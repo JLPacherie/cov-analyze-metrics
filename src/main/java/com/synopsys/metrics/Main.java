@@ -64,7 +64,7 @@ public class Main {
     String[] localArgs = { "Hello World" , "No Issue There"};
     osCommandInjectionSink(localArgs);
     
-    //osCommandInjectionSink(args);
+    osCommandInjectionSink(args);
   }
   public boolean init(String[] args) {
     
