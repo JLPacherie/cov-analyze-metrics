@@ -43,8 +43,8 @@
 		//
 		"build": {
 			
-			"enabled": false,
-			"incremetal": true,
+			"enabled": true,
+			"incremental": true,
 
 			"maven_cache": "/opt/maven/repos",
 
