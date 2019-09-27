@@ -27,7 +27,7 @@
 	"project": {
 		
 		// The name of the project
-		"name": "Coverity Analysis Metrics",
+		"name": "cov-analyze-metrics",
 
 		// The version name of the project
 		"version": "2019.09",
