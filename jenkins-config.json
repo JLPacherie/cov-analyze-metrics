@@ -1,0 +1,74 @@
+{
+
+	// Version number of the configuration file
+	"version": "1.0",
+
+	"includes": [
+		// --------------------------------------------------------------------------
+		"coverity.json",     // Base definitions for Coverity SAST Analysis
+		"blackduck.json",    // Base definitions for BlackDuck Source SCA Analysis 
+		"bdba.json",         // Base definitions for BlackDuck Binary SCA Analysis 
+		"compliance.json",   // Base definitions for Compliance Gate
+		// --------------------------------------------------------------------------
+		"cov-java-webapp.json"  // Additional Coverity definitions for Java/JS based webapp
+	],
+
+	"coverity": {
+		// Does Coverity analysis needed for this project ?
+		"enabled": true,
+		// Overweritte default version
+		"version": "last",
+	},
+
+	"blackduck": {
+		"enabled": true
+	},
+
+	"project": {
+		
+		// The name of the project
+		"name": "Coverity Analysis Metrics",
+
+		// The version name of the project
+		"version": "2019.09",
+		
+		// A RegEx pattern to find the prohect artefacts
+		"artifacts": "${.project.path}/target/*.jar",
+
+		// Where's is located (checked-out) the project inthe Workspace
+		"path": "project",
+
+		//
+		// Configuration of the project build.
+		//
+		"build": {
+			
+			"enabled": false,
+			"incremetal": true,
+
+			"maven_cache": "/opt/maven/repos",
+
+			//
+			// The build phase is executed from a Docker container
+			//
+			"docker": {
+				"image": "maven:3.6-jdk-11",
+				"args": "-v "
+			},
+
+			//
+			// Build script / command
+			//
+
+			// This command is executed before trying to build or clean
+			"init_command": "",
+
+			// This command is executed only for a fresh / full build
+			"build_command": " mvn -Dmaven.repo.local=\"${.project.build.maven_cache}\" -DskipTests package",
+
+			// This command is for building the artifacts
+			"clean_command": " mvn -Dmaven.repo.local=\"${.project.build.maven_cache}\" -DskipTests clean"
+		},
+
+	}
+}
