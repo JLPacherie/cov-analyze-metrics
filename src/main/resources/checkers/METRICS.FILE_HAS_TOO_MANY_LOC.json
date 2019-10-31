@@ -2,22 +2,22 @@
   // Version of the syntax for this checker.
   "version": "1.0",
   // The name of the checker as to appear in Coverity defects
-  "name": "METRICS.LOC_TOO_HIGH",
+  "name": "METRICS.FILE_HAS_TOO_MANY_LOC",
   // A short and generic descrption of the checker purpose
-  "description": "Detects functions with a number of line of code above a threshold",
+  "description": "Detects files with a too high total number of line of code",
   // The list of the metrics in Coverity with their associated default tresholds
   "thresholds": [
     {
-    	"scope": "Function Metrics",
+      // The threshold applies only to Function metrics.
+    	"scope": "File Metrics",
       // The name of the theshold the user can adjust from the CLI
-      "name" : "loc",
+      "name": "loc_sum",
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
-      "metrics": "loc",
+      "metrics": "loc_sum",
       // The default theshold
-      "threshold": 300
+      "threshold": 500
     }
   ],
 
-  "defect-template": "METRICS.LOC_TOO_HIGH.txt"
-
+  "defect-template": "METRICS.FILE_HAS_TOO_MANY_LOC.txt"
 }

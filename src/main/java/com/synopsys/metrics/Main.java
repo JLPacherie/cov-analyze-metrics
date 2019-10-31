@@ -4,6 +4,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.synopsys.sipm.model.Parameter;
+
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -20,245 +22,305 @@ import static java.util.stream.Collectors.joining;
 
 public class Main {
 
-  protected static Logger logger = LogManager.getLogger(Main.class);
-  protected Config config;
+	protected static Logger _logger = LogManager.getLogger(Main.class);
+	protected Config config;
 
-  public void MySuperBuggyMethod() {
-  	String str = null;
-  	String substr = str.substring(4);
-  }
-  
-  public boolean init(String[] args) {
-    logger.info("Creating a new configuration from the CLI options.");
-    config = new Config(args);
+	//
+	// ******************************************************************************************************************
+	//
 
-    if (config.isValid()) {
+	/** Initialize the application for the options on the CLI. */
+	public boolean init(String[] args) {
+		_logger.info("Creating a new configuration from the CLI options.");
+		config = new Config(args);
 
-      logger.info("configuration is valid, we can proceed further.");
-      logger.info("There are " + config.enabledCheckers.size() + " checkers to process.");
+		if (config.isValid()) {
 
-    } else {
+			_logger.info("configuration is valid, we can proceed further.");
+			_logger.info("There are " + config.enabledCheckers.size() + " checkers to process.");
 
-      System.out.println(config.getStandardBanner());
-      System.out.println("Execution failed, check log file and command line usage with --help.");
-      System.exit(-1);
-    }
+		} else {
 
-    return true;
-  }
+			System.out.println(config.getStandardBanner());
+			System.out.println("Execution failed, check log file and command line usage with --help.");
+			System.exit(-1);
+		}
 
+		return true;
+	}
 
-  public Iterator<FuncMetrics> getFunctionMetricIter(String filename) {
+	//
+	// ******************************************************************************************************************
+	//
 
-    XMLInputFactory xmlif = XMLInputFactory.newInstance();
-    if (xmlif.isPropertySupported("javax.xml.stream.isReplacingEntityReferences")) {
-      xmlif.setProperty("javax.xml.stream.isReplacingEntityReferences", Boolean.TRUE);
-    }
+	/** Extract from given file the XML segment for Function metrics, returns unparsed FuncMetrics. */
+	public Iterator<FuncMetrics> getFunctionMetricIter(String filename) {
 
-    try {
+		XMLInputFactory xmlif = XMLInputFactory.newInstance();
+		if (xmlif.isPropertySupported("javax.xml.stream.isReplacingEntityReferences")) {
+			xmlif.setProperty("javax.xml.stream.isReplacingEntityReferences", Boolean.TRUE);
+		}
 
-      InputStream xmlRootPrefix = IOUtils.toInputStream("<root>", Charset.forName("UTF8"));
-      InputStream fileStream = new FileInputStream(config.getFunctionsFileName());
-      InputStream gzipStream = new GZIPInputStream(fileStream);
-      InputStream xmlRootSuffix = IOUtils.toInputStream("</root>", Charset.forName("UTF8"));
+		try {
 
-      InputStream xmlInput = new SequenceInputStream(xmlRootPrefix, new SequenceInputStream(gzipStream, xmlRootSuffix));
+			InputStream xmlRootPrefix = IOUtils.toInputStream("<root>", Charset.forName("UTF8"));
+			InputStream fileStream = new FileInputStream(config.getFunctionsFileName());
+			InputStream gzipStream = new GZIPInputStream(fileStream);
+			InputStream xmlRootSuffix = IOUtils.toInputStream("</root>", Charset.forName("UTF8"));
 
-      final XMLStreamReader xmlsr = xmlif.createXMLStreamReader(xmlInput);
+			InputStream xmlInput = new SequenceInputStream(xmlRootPrefix, new SequenceInputStream(gzipStream, xmlRootSuffix));
 
-      final String stripPath  = config.getStripPath();
+			final XMLStreamReader xmlsr = xmlif.createXMLStreamReader(xmlInput);
 
-      return new Iterator<FuncMetrics>() {
+			final String stripPath = config.getStripPath();
 
+			return new Iterator<FuncMetrics>() {
 
-        @Override
-        /** Move to the next fnmetrics tag or fails */
-        public boolean hasNext() {
-          boolean result = false;
-          try {
+				@Override
+				/** Move to the next fnmetrics tag or fails */
+				public boolean hasNext() {
+					boolean result = false;
+					try {
 
-            result = (xmlsr != null) && xmlsr.hasNext();
-            if (result) {
-              result = false;
-              while (!result && xmlsr.hasNext()) {
-                int eventType = xmlsr.next();
-                result = eventType == XMLEvent.START_ELEMENT &&
-                        "fnmetric".equals(xmlsr.getName().getLocalPart());
-              }
-            }
-          } catch (XMLStreamException e) {
-            e.printStackTrace();
-            result = false;
-          }
-          return result;
-        }
+						result = (xmlsr != null) && xmlsr.hasNext();
+						if (result) {
+							result = false;
+							while (!result && xmlsr.hasNext()) {
+								int eventType = xmlsr.next();
+								result = eventType == XMLEvent.START_ELEMENT && "fnmetric".equals(xmlsr.getName().getLocalPart());
+							}
+						}
+					} catch (XMLStreamException e) {
+						e.printStackTrace();
+						result = false;
+					}
+					return result;
+				}
 
-        @Override
-        /** Read the fnmetric record at current position. */
-        public FuncMetrics next() {
-          FuncMetrics result = new FuncMetrics();
-          boolean loaded = result.read(xmlsr);
-          while (!loaded && hasNext()) {
-            loaded = result.read(xmlsr);
-          }
+				@Override
+				/** Read the fnmetric record at current position. */
+				public FuncMetrics next() {
+					FuncMetrics result = new FuncMetrics();
+					boolean loaded = result.read(xmlsr);
+					while (!loaded && hasNext()) {
+						loaded = result.read(xmlsr);
+					}
 
-          if ((loaded) && (!stripPath.isEmpty()) && result.getPathname().startsWith(stripPath)) {
-            result.setPathname(result.getPathname().substring(stripPath.length()));
-          }
-          return loaded ? result : null;
-        }
-      }
+					if ((loaded) && (!stripPath.isEmpty()) && result.getPathname().startsWith(stripPath)) {
+						result.setPathname(result.getPathname().substring(stripPath.length()));
+					}
+					return loaded ? result : null;
+				}
+			};
 
-              ;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (XMLStreamException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (XMLStreamException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
+	//
+	// ******************************************************************************************************************
+	//
 
-  /**
-   * Returns a new stream for converting each XML segment for the metrics of a function into a Hash map.
-   */
-  public Stream<FuncMetrics> getParsedStream(String filename) {
+	/**
+	 * Returns a new stream for converting each XML segment for the metrics of a function into a Hash map.
+	 */
+	public Stream<FuncMetrics> getParsedStream(String filename) {
 
-    Iterator<FuncMetrics> iter = getFunctionMetricIter(filename);
+		Iterator<FuncMetrics> iter = getFunctionMetricIter(filename);
 
-    return StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(iter, 0),
-            true
-    ).filter(fm -> fm.parse());
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iter, 0), true).filter(fm -> fm.parse());
 
-  }
+	}
 
-  public static void main(String[] args) {
+	public static void main(String[] args) {
 
-    logger.info("");
-    logger.info("**************************************");
-    logger.info("** Starting new execution from here **");
-    logger.info("**************************************");
-    logger.info("");
+		_logger.info("");
+		_logger.info("**************************************");
+		_logger.info("** Starting new execution from here **");
+		_logger.info("**************************************");
+		_logger.info("");
 
-    if ((args == null) || args.length == 0) {
-      logger.error("Unable to execute without command line arguments.");
-      return;
-    }
+		if ((args == null) || args.length == 0) {
+			_logger.error("Unable to execute without command line arguments.");
+			return;
+		}
 
+		_logger.info("Command line arguments:");
+		for (String opt : args) {
+			_logger.info("'" + opt + "'");
+		}
+		_logger.info("");
 
-    logger.info("Command line arguments:");
-    for (String opt : args) {
-      logger.info("'" + opt + "'");
-    }
-    logger.info("");
+		Main main = new Main();
 
-    Main main = new Main();
+		main.init(args);
 
-    main.init(args);
+		Config config = main.config;
 
-    Config config = main.config;
+		String inputMetricFileName = config.getFunctionsFileName();
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Collecting defect results.
-    // ----------------------------------------------------------------------------------------------------------------
-    List<Defect> defects = main.getParsedStream(config.getFunctionsFileName())
-            .parallel()
-            .filter(fnMetrics -> config.filter(fnMetrics))
-            .flatMap(fnmetrics -> config.check(fnmetrics))
-            .collect(Collectors.toList());
+		// ----------------------------------------------------------------------------------------------------------------
+		// Initialize the collection of Measurable objects with the Function Metrics extracted from Coverity metrics file
+		// ----------------------------------------------------------------------------------------------------------------
+		_logger.debug("Collecting all function metrics from " + inputMetricFileName);
+		List<Measurable> measurableList = new ArrayList<Measurable>();
+		main.getParsedStream(inputMetricFileName).forEach(m -> measurableList.add(m));
+		_logger.debug("Parsing input file metrics found " + measurableList.size() + " functions with metrics.");
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Counts results by checker
-    // ----------------------------------------------------------------------------------------------------------------
-    {
-      Map<String, Integer> countBy = new HashMap<>();
-      for (Defect defect : defects) {
-        String key = defect.checker.getName();
-        countBy.compute(key, (k, v) -> (v == null) ? new Integer(1) : v + 1);
-      }
+		// ----------------------------------------------------------------------------------------------------------------
+		// Add to the collection of Measurable objects the aggregated function metrics for a same file
+		// ----------------------------------------------------------------------------------------------------------------
+		{
+			_logger.debug("Aggregating function metrics by files and modules");
+			Map<String, List<Measurable>> byFileMeasures = new HashMap<>();
+			Map<String, List<Measurable>> byModuleMeasures = new HashMap<>();
 
-      System.out.println("Defects count by checker");
+			for (Measurable m : measurableList) {
+				if (m instanceof FuncMetrics) {
+					FuncMetrics fMetrics = (FuncMetrics) m;
 
-      countBy.entrySet().stream()
-              .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-              .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
+					String fileLabel = fMetrics.getPathname();
+					List<Measurable> byFileList = byFileMeasures.get(fileLabel);
+					if (byFileList == null) {
+						byFileList = new ArrayList<Measurable>();
+						byFileMeasures.put(fileLabel, byFileList);
+					}
+					byFileList.add(fMetrics);
 
-    }
+					String className = fMetrics.getClassName();
+					String moduleLabel = fMetrics.getClassName();
+					List<Measurable> byModuleList = byModuleMeasures.get(moduleLabel);
+					if (byModuleList == null) {
+						byModuleList = new ArrayList<Measurable>();
+						byModuleMeasures.put(moduleLabel, byModuleList);
+					}
+					byModuleList.add(fMetrics);
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Counts results by file
-    // ----------------------------------------------------------------------------------------------------------------
-    {
-      Map<String, Integer> countBy = new HashMap<>();
-      for (Defect defect : defects) {
-        String path = defect.funcMetrics.getPathname();
-        countBy.compute(path, (k, v) -> (v == null) ? new Integer(1) : v + 1);
-      }
+				}
+			}
 
-      System.out.println("Defects count by file");
-      countBy.entrySet().stream()
-              .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-              .forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
-    }
+			_logger.debug("Found metrics for " + byFileMeasures.size() + " different files");
+			_logger.debug("Found metrics for " + byModuleMeasures.size() + " different modules");
 
-    logger.info("Found " + defects.size() + " defects.");
+			for (Map.Entry<String, List<Measurable>> entry : byFileMeasures.entrySet()) {
+				String fileLabel = entry.getKey();
+				_logger.debug("Adding a file metrics for " + fileLabel);
+				CompositeMetrics metrics = new CompositeMetrics("File Metrics");
+				for (Measurable m : entry.getValue()) {
+					metrics.add(m);
+				}
+				metrics.add("file", fileLabel, Parameter.READ_WRITE);
+				measurableList.add(metrics);
+				_logger.debug("Registered " + entry.getValue().size() + " funtions in that file.");
+			}
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Build the JSON file for cov-import-results
-    // ----------------------------------------------------------------------------------------------------------------
-    {
-      try {
+			for (Map.Entry<String, List<Measurable>> entry : byModuleMeasures.entrySet()) {
+				String moduleLabel = entry.getKey();
+				_logger.debug("Adding a module metrics for " + moduleLabel);
+				CompositeMetrics metrics = new CompositeMetrics("Module Metrics");
+				for (Measurable m : entry.getValue()) {
+					metrics.add(m);
+				}
+				metrics.add("file", metrics.getSourcesLabel(), Parameter.READ_WRITE);
+				metrics.add("module", moduleLabel, Parameter.READ_WRITE);
+				measurableList.add(metrics);
+				_logger.debug("Registered " + entry.getValue().size() + " functions in that module.");
+			}
 
-        FileOutputStream os = new FileOutputStream(config.getReportFile());
-        Writer writer = new OutputStreamWriter(os);
+		}
+		// ----------------------------------------------------------------------------------------------------------------
+		// Collecting defect results.
+		// ----------------------------------------------------------------------------------------------------------------
+		List<Defect> defects = measurableList.parallelStream() //
+				.filter(fnMetrics -> config.filter(fnMetrics))// TODO Checker.check implementation to implement filtering ?
+				.flatMap(measurable -> config.check(measurable))// Each measured item may trigger multiple defects
+				.collect(Collectors.toList());
 
+		// ----------------------------------------------------------------------------------------------------------------
+		// Counts results by checker
+		// ----------------------------------------------------------------------------------------------------------------
+		{
+			Map<String, Integer> countBy = new HashMap<>();
+			for (Defect defect : defects) {
+				String key = defect.checker.getName();
+				countBy.compute(key, (k, v) -> (v == null) ? Integer.valueOf(1) : v + 1);
+			}
 
-        writer.write("\n" +
-                "{\n" +
-                "\t\"header\" : {\n" +
-                "\t\t\"version\" : 1,\n" +
-                "\t\t\"format\" : \"cov-import-results input\" \n" +
-                "\t},\n" +
-                "\t\n" +
-                "\t\"issues\": [\n");
+			System.out.println("Defects count " + defects.size());
+			System.out.println("Defects count by checker");
 
+			countBy.entrySet().stream()//
+					.sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue())) //
+					.forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
 
-        boolean first = true;
-        for (int iDefect = 0; iDefect < defects.size(); iDefect++) {
-          String json = defects.get(iDefect).getJson();
-          if (json != null) {
-            if (!first) writer.write(",\n");
-            writer.write("\t\t");
-            writer.write(json);
-            first = false;
-          }
-          iDefect++;
+		}
 
-        }
+		// ----------------------------------------------------------------------------------------------------------------
+		// Counts results by file
+		// ----------------------------------------------------------------------------------------------------------------
+		{
+			Map<String, Integer> countBy = new HashMap<>();
+			for (Defect defect : defects) {
+				String src = defect.measured.getSourcesLabel();
+				countBy.compute(src, (k, v) -> (v == null) ? new Integer(1) : v + 1);
+			}
 
-        // End of JSON segments for defects and beginning of the array for source files.
-        writer.write("\n\t],\n" +
-                "\t\"sources\": [\n");
+			System.out.println("Defects count by file");
+			countBy.entrySet().stream().sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+					.forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
+		}
 
-        String json = defects.stream()
-                .map(defect -> defect.funcMetrics.getPathname())
-                .distinct()
-                .map(path -> "\t\t{ \"file\": \"" + path + "\", \"encoding\": \"ASCII\" }")
-                .collect(joining(",\n"));
+		_logger.info("Found " + defects.size() + " defects.");
 
-        writer.write(json);
+		// ----------------------------------------------------------------------------------------------------------------
+		// Build the JSON file for cov-import-results
+		// ----------------------------------------------------------------------------------------------------------------
+		{
+			try (FileOutputStream os = new FileOutputStream(config.getReportFile());
+					Writer writer = new OutputStreamWriter(os);) {
 
-        writer.write("\n\t]\n}\n");
+				writer.write("\n" + "{\n" + "\t\"header\" : {\n" + "\t\t\"version\" : 1,\n"
+						+ "\t\t\"format\" : \"cov-import-results input\" \n" + "\t},\n" + "\t\n" + "\t\"issues\": [\n");
 
-        writer.close();
+				boolean first = true;
+				for (int iDefect = 0; iDefect < defects.size(); iDefect++) {
+					String json = defects.get(iDefect).getJson();
+					if (json != null) {
+						if (!first)
+							writer.write(",\n");
+						writer.write("\t\t");
+						writer.write(json);
+						first = false;
+					} else {
+						_logger.error("Unable to retreive JSON excerpt for defect");
+					}
+					iDefect++;
 
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+				}
 
-    }
-  }
+				// End of JSON segments for defects and beginning of the array for source files.
+				writer.write("\n\t],\n" + "\t\"sources\": [\n");
+
+				String json = defects.stream()//
+						.map(defect -> defect.measured.getSourcesLabel())//
+						.distinct() //
+						.map(path -> "\t\t{ \"file\": \"" + path + "\", \"encoding\": \"ASCII\" }")//
+						.collect(joining(",\n"));
+
+				writer.write(json);
+
+				writer.write("\n\t]\n}\n");
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+	}
 }

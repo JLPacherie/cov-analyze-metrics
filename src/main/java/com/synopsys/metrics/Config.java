@@ -1,26 +1,48 @@
 package com.synopsys.metrics;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.synopsys.metrics.checkers.ModuleHasTooManyFunctions;
 
 /**
  * This class is used to save the configuration for an analysis. Such a configuration can be read from the command line
@@ -28,7 +50,7 @@ import java.util.stream.Stream;
  */
 public class Config {
 
-	protected Logger logger = LogManager.getLogger(Config.class);
+	protected Logger _logger = LogManager.getLogger(Config.class);
 
 	// ------------------------------------------------------------------------------------------------------------------
 	// Configuration parameters.
@@ -47,10 +69,10 @@ public class Config {
 	/**
 	 * The list of filters defined at the configuration level to include or exclude some function prefix for checking.
 	 */
-	private List<Function<FuncMetrics, Boolean>> exclusionFilters = new ArrayList<>();
+	private List<Function<Measurable, Boolean>> exclusionFilters = new ArrayList<>();
 
 	/**
-	 * The list of enabled chechets by the current configuration.
+	 * The list of enabled checkers by the current configuration.
 	 */
 	public List<Checker> enabledCheckers = new ArrayList<Checker>();
 
@@ -73,7 +95,7 @@ public class Config {
 	public Config(String[] args) {
 		boolean status = cliLoad(args);
 		if (!status) {
-			logger.error("Initialization of configuration failed from command line");
+			_logger.error("Initialization of configuration failed from command line");
 		}
 	}
 
@@ -83,7 +105,7 @@ public class Config {
 	public Config(String jsonFileName) {
 		boolean status = jsonLoad(jsonFileName);
 		if (!status) {
-			logger.error("Initialization of configuration failed from file " + jsonFileName);
+			_logger.error("Initialization of configuration failed from file " + jsonFileName);
 		}
 	}
 
@@ -97,6 +119,7 @@ public class Config {
 
 			options.addOption("h", "help", false, "display help message");
 			options.addOption("v", "verbose", false, "Run verbosely");
+			options.addOption("g", "debug", false, "Run in debug mode");
 
 			options.addOption(Option.builder().required(false).longOpt("exclude-pathname-regex").numberOfArgs(1)
 					.desc("Exclude all functions defined in file with pathname matching a regex").build());
@@ -156,26 +179,120 @@ public class Config {
 	// ******************************************************************************************************************
 	//
 
+	public String getResource(String path, String resource) {
+		String result = null;
+		URI uri = null;
+		try {
+			uri = Config.class.getResource(path).toURI();
+		} catch (URISyntaxException e) {
+			_logger.error("Unable to create URI from Jar " + e.getMessage());
+		} catch (NullPointerException e) {
+			_logger.error("Unable to create URI from Jar " + e.getMessage());
+		}
+
+		if (uri == null) {
+			_logger.error("Unable to initialize configuration without a config directory specified.");
+		} else {
+
+			//
+			// Load the resource from the executable JAR
+			//
+			if (uri.getScheme().contains("jar")) {
+				try {
+					URL jar = Config.class.getProtectionDomain().getCodeSource().getLocation();
+					Path jarFile = Paths.get(jar.toString().substring("file:".length()));
+					FileSystem fs = FileSystems.newFileSystem(jarFile, null);
+					DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(path));
+
+					HashMap<String, InputStream> allStreams = new HashMap<>();
+					for (Path p : directoryStream) {
+						InputStream is = Config.class.getResourceAsStream(p.toString());
+						if (is != null) {
+							allStreams.put(p.getFileName().toString(), is);
+						} else {
+							_logger.debug("Unable to create input stream for path " + p.toString());
+						}
+					}
+
+					for (HashMap.Entry<String, InputStream> entry : allStreams.entrySet()) {
+						if (entry.getKey().equals(resource)) {
+							try {
+								result = IOUtils.toString(entry.getValue(), "UTF8");
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+
+				} catch (IOException e) {
+					_logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
+				}
+
+			}
+
+			//
+			// Load the checkers from a FS directory (classpath as for running in the IDE)
+			//
+			else {
+				_logger.info("Loading  list of known checkers from internal definitions");
+				try {
+					URL url = Config.class.getResource(path);
+					if (url == null) {
+						_logger.error("Unable to initialize configuration without a config directory specified.");
+					} else {
+						File dir = new File(url.toURI());
+						File listFiles[] = dir.listFiles();
+						if (listFiles != null) {
+							for (File nextFile : listFiles) {
+								if (nextFile.getPath().endsWith(path + "/" + resource)) {
+									try {
+										result = FileUtils.readFileToString(nextFile, "UTF8");
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+				} catch (URISyntaxException e) {
+				}
+			}
+		}
+		return result;
+	}
+
+	//
+	// ******************************************************************************************************************
+	//
+
 	/**
 	 * After being loaded, a configuration should be initialized.
 	 */
 	public boolean init() {
 		boolean result = true;
 
-		logger.info("Initializing configuration " + getName());
+		_logger.info("Initializing configuration " + getName());
 
-		logger.info("Clearing list of " + enabledCheckers.size() + " enabled checkers.");
+		_logger.info("Clearing list of " + enabledCheckers.size() + " enabled checkers.");
 		enabledCheckers.clear();
 
-		logger.info("Clearing list of " + availableCheckers.size() + " available checkers.");
+		_logger.info("Clearing list of " + availableCheckers.size() + " available checkers.");
 		availableCheckers.clear();
+		{
+			ModuleHasTooManyFunctions checker = new ModuleHasTooManyFunctions();
+			String tmplDefectFile = checker.getJsonDefectTemplateFilename();
+			String tmplDefectJson = getResource("/checkers", tmplDefectFile);
+			checker.setJsonDefectTemplate(tmplDefectJson);
+			if (checker.isValid())
+				availableCheckers.add(checker);
+		}
 
 		//
 		// A Configuration can be initialized from a FileSystem directory where all available
 		// checker definitions might be found in files METRICS*.json
 		//
 		if (getConfigDir() != null) {
-			logger.info("Loading  list of known checkers from " + getConfigDir());
+			_logger.info("Loading  list of known checkers from " + getConfigDir());
 			File cfgDir = new File(getConfigDir());
 			if (cfgDir.isDirectory()) {
 				WildcardFileFilter filter = new WildcardFileFilter("METRICS.*.json");
@@ -195,20 +312,20 @@ public class Config {
 						}
 						checker.setJsonDefectTemplate(template);
 					} else {
-						logger.error("Unable to load checker from file " + checkerFile.getAbsolutePath());
+						_logger.error("Unable to load checker from file " + checkerFile.getAbsolutePath());
 						result = false;
 					}
 				}
 			} else {
-				logger.error("No configuration directory found at " + cfgDirPath);
+				_logger.error("No configuration directory found at " + cfgDirPath);
 				result = false;
 			}
 		}
 
 		//
 		// A configuration can also be initialized from the resources embedded in the application
-		// Jar file. This is a bit motre tricky because the way that resources can be accessed at
-		// runtime depends if we are debugging or running from a packaged Jar file.
+		// Jar file. This is a bit more tricky because the way resources can be accessed at
+		// runtime depends if we are debugging from the IDE or running from a packaged Jar file.
 		//
 
 		else {
@@ -217,13 +334,13 @@ public class Config {
 			try {
 				uri = Config.class.getResource(folderPath).toURI();
 			} catch (URISyntaxException e) {
-				logger.error("Unable to create URI from Jar " + e.getMessage());
+				_logger.error("Unable to create URI from Jar " + e.getMessage());
 			} catch (NullPointerException e) {
-				logger.error("Unable to create URI from Jar " + e.getMessage());
+				_logger.error("Unable to create URI from Jar " + e.getMessage());
 			}
 
 			if (uri == null) {
-				logger.error("Unable to initialize configuration without a config directory specified.");
+				_logger.error("Unable to initialize configuration without a config directory specified.");
 				result = false;
 			} else {
 
@@ -243,7 +360,7 @@ public class Config {
 							if (is != null) {
 								allStreams.put(p.getFileName().toString(), is);
 							} else {
-								logger.debug("Unable to create input stream for path " + p.toString());
+								_logger.debug("Unable to create input stream for path " + p.toString());
 							}
 						}
 
@@ -273,7 +390,7 @@ public class Config {
 						}
 
 					} catch (IOException e) {
-						logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
+						_logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
 					}
 
 				}
@@ -282,11 +399,11 @@ public class Config {
 				// Load the checkers from a FS directory (classpath as for running in the IDE)
 				//
 				else {
-					logger.info("Loading  list of known checkers from internal definitions");
+					_logger.info("Loading  list of known checkers from internal definitions");
 					try {
 						URL url = Config.class.getResource("/checkers");
 						if (url == null) {
-							logger.error("Unable to initialize configuration without a config directory specified.");
+							_logger.error("Unable to initialize configuration without a config directory specified.");
 							result = false;
 						} else {
 							File dir = new File(url.toURI());
@@ -296,7 +413,7 @@ public class Config {
 									if (nextFile.getPath().endsWith(".json")) {
 										Checker checker = new Checker(nextFile);
 										if (checker.isValid()) {
-											logger.info("Loading checker definition from " + nextFile.getName());
+											_logger.info("Loading checker definition from " + nextFile.getName());
 											availableCheckers.add(checker);
 											String templateFile = checker.getJsonDefectTemplateFilename();
 											URL tURL = Config.class.getResource("/checkers/" + templateFile);
@@ -309,10 +426,10 @@ public class Config {
 												}
 												checker.setJsonDefectTemplate(template);
 											} else {
-												logger.error("Template for defect not found at " + templateFile);
+												_logger.error("Template for defect not found at " + templateFile);
 											}
 										} else {
-											logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
+											_logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
 											result = false;
 										}
 									}
@@ -458,9 +575,9 @@ public class Config {
 		if ((checker != null) && (checker.isValid())) {
 			enabledCheckers.add(checker);
 			availableCheckers.remove(checker);
-			logger.info("Adding checker " + checker);
+			_logger.info("Adding checker " + checker);
 		} else {
-			logger.error("Invalid checker submitted to configuration " + checker);
+			_logger.error("Invalid checker submitted to configuration " + checker);
 			checker = null;
 		}
 
@@ -527,9 +644,9 @@ public class Config {
 
 				// A filter returns TRUE if the fnmetrics is excluded
 
-				Function<FuncMetrics, Boolean> filter = (fnmetrics) -> {
+				Function<Measurable, Boolean> filter = (fnmetrics) -> {
 					if (fnmetrics != null) {
-						String pathname = fnmetrics.getPathname();
+						String pathname = fnmetrics.getSourcesLabel();
 						Matcher matcher = pattern.matcher(pathname);
 						return (excluded) ? (matcher.matches()) : !matcher.matches();
 					}
@@ -538,9 +655,9 @@ public class Config {
 
 				exclusionFilters.add(filter);
 
-				logger.info("Adding filter, all functions defined in files matching " + regex + " are ignored");
+				_logger.info("Adding filter, all functions defined in files matching " + regex + " are ignored");
 			} catch (PatternSyntaxException e) {
-				logger.error("Failed to add filter, regex pattern invalid " + regex + ":" + e.getMessage());
+				_logger.error("Failed to add filter, regex pattern invalid " + regex + ":" + e.getMessage());
 				result = false;
 			}
 		}
@@ -554,10 +671,10 @@ public class Config {
 	/**
 	 * Applies all filters at the global level to the given pathname and returns true of the file is to be processed.
 	 */
-	public boolean filter(FuncMetrics fnMetrics) {
-		boolean result = !exclusionFilters.stream().anyMatch(filter -> filter.apply(fnMetrics));
+	public boolean filter(Measurable metrics) {
+		boolean result = !exclusionFilters.stream().anyMatch(filter -> filter.apply(metrics));
 		if (!result) {
-			logger.debug("Functions metrics from " + fnMetrics.getPathname() + " are filtered out.");
+			_logger.debug("Functions metrics from " + metrics.getSourcesLabel() + " are filtered out.");
 		}
 		return result;
 	}
@@ -569,11 +686,11 @@ public class Config {
 	/**
 	 * Build a stream of the defects generated by the enabled and not filtered out checkers on the given function.
 	 */
-	public Stream<Defect> check(FuncMetrics fnMetrics) {
+	public Stream<Defect> check(Measurable metrics) {
 
 		return enabledCheckers.stream() // List all enabled checkers
-				.filter(checker -> checker.filter(fnMetrics)) // Filter out checkers that doesn't apply to this function
-				.map(checker -> checker.check(fnMetrics)) // Check function's metrics with current
+				.filter(checker -> checker.filter(metrics)) // Filter out checkers that doesn't apply to this function
+				.map(checker -> checker.check(metrics)) // Check function's metrics with current
 				.filter(defect -> defect != null); // Filter out null defects
 	}
 
@@ -584,7 +701,7 @@ public class Config {
 	public boolean isValid() {
 		boolean result = true;
 
-		logger.info("Checking current configuration ...");
+		_logger.info("Checking current configuration ...");
 
 		// ----------------------------------------
 		// Validate the Intermediate Directory
@@ -592,15 +709,15 @@ public class Config {
 
 		if (idir == null) {
 			result = false;
-			logger.error("No Coverity analysis intermediate directory defined.");
+			_logger.error("No Coverity analysis intermediate directory defined.");
 		} else {
 			File dir = new File(idir);
 			if (!dir.isDirectory()) {
 				result = false;
-				logger.error("Missing intermediate directory at '" + idir + "'");
+				_logger.error("Missing intermediate directory at '" + idir + "'");
 			} else if (!dir.canWrite()) {
 				result = false;
-				logger.error("Write access permissions denied for intermediate directory at " + idir);
+				_logger.error("Write access permissions denied for intermediate directory at " + idir);
 			}
 		}
 
@@ -609,14 +726,14 @@ public class Config {
 			if (targetPath != null) {
 				File outputDir = new File(targetPath);
 				if (!outputDir.isDirectory()) {
-					logger.error("Coverity output directory not found at '" + targetPath + "'");
+					_logger.error("Coverity output directory not found at '" + targetPath + "'");
 					result = false;
 				} else if (!outputDir.canWrite()) {
-					logger.error("Write access permission denied on Coverity output directory at '" + targetPath + "'");
+					_logger.error("Write access permission denied on Coverity output directory at '" + targetPath + "'");
 					result = false;
 				}
 			} else {
-				logger.error("Coverity output directory not defined.");
+				_logger.error("Coverity output directory not defined.");
 				result = false;
 			}
 		}
@@ -626,14 +743,14 @@ public class Config {
 			if (fnName != null) {
 				File functions = new File(fnName);
 				if (!functions.isFile()) {
-					logger.error("The provided intermediate directory doesn't contain a metrics file.");
+					_logger.error("The provided intermediate directory doesn't contain a metrics file.");
 					result = false;
 				} else if (!functions.canRead()) {
-					logger.error("Access permission defined for the metrics file.");
+					_logger.error("Access permission defined for the metrics file.");
 					result = false;
 				}
 			} else {
-				logger.error("No function metrics file defined.");
+				_logger.error("No function metrics file defined.");
 				result = false;
 			}
 		}
@@ -643,13 +760,13 @@ public class Config {
 		// ----------------------------------------
 		if (enabledCheckers.size() + availableCheckers.size() == 0) {
 			result = false;
-			logger.error("This configuration is not valid because there's no checker defined or enabled.");
+			_logger.error("This configuration is not valid because there's no checker defined or enabled.");
 		}
 
 		for (Checker checker : enabledCheckers) {
 			if (!checker.isValid()) {
 				result = false;
-				logger.error("Invalid enabled checker detected with " + checker.toString());
+				_logger.error("Invalid enabled checker detected with " + checker.toString());
 			}
 		}
 
@@ -659,7 +776,7 @@ public class Config {
 		for (Checker checker : availableCheckers) {
 			if (!checker.isValid()) {
 				result = false;
-				logger.error("Invalid available checker definition detected with " + checker.toString());
+				_logger.error("Invalid available checker definition detected with " + checker.toString());
 			}
 		}
 
@@ -684,6 +801,19 @@ public class Config {
 					return true;
 				}
 
+				if (line.hasOption("debug")) {
+					/*
+					LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+					Configuration config = ctx.getConfiguration();
+					LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME); 
+					loggerConfig.setLevel(Level.DEBUG);
+					ctx.updateLoggers();
+					*/
+					Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.DEBUG);
+
+					_logger.debug("Activating debug logs");
+				}
+
 				// ----------------------------------------------------------------
 				// Set all options from the proposed configuration file
 				// ----------------------------------------------------------------
@@ -693,13 +823,13 @@ public class Config {
 						if (new File(fileName).isFile()) {
 							result = jsonLoad(fileName);
 							if (!result) {
-								logger.error("Incomplete on bad configuration from '" + fileName + "'");
+								_logger.error("Incomplete on bad configuration from '" + fileName + "'");
 							}
 						} else {
-							logger.error("Bad default configuration file (not a file): '" + fileName + "'");
+							_logger.error("Bad default configuration file (not a file): '" + fileName + "'");
 						}
 					} else {
-						logger
+						_logger
 								.warn("No default configuration file used, all required options must be defined in the command line.");
 					}
 				}
@@ -712,17 +842,17 @@ public class Config {
 					if (new File(dirName).isDirectory()) {
 						setConfigDir(dirName);
 					} else {
-						logger.error("Bad  configuration directory specified (not a directory): '" + dirName + "'");
+						_logger.error("Bad  configuration directory specified (not a directory): '" + dirName + "'");
 					}
 				} else {
-					logger.info("There's no custom configuration specified, using embedded configurations.");
+					_logger.info("There's no custom configuration specified, using embedded configurations.");
 				}
 
 				// ----------------------------------------------------------------
 				// Initialize configuration from the configuration file and folder
 				// ----------------------------------------------------------------
 				if (!init()) {
-					logger.error("Initialisation from configuration from JSON file failed.");
+					_logger.error("Initialisation from configuration from JSON file failed.");
 				}
 
 				// ****************************************************************
@@ -758,11 +888,11 @@ public class Config {
 						String[] patterns = list.split(",");
 						for (String strPattern : patterns) {
 							if (!addFileFilter(strPattern, true)) {
-								logger.error("Unable to add regex pathname filter from '" + strPattern + "'");
+								_logger.error("Unable to add regex pathname filter from '" + strPattern + "'");
 							}
 						}
 					} else {
-						logger.info("There's file pathname exclusion patterns.");
+						_logger.info("There's file pathname exclusion patterns.");
 					}
 				}
 
@@ -774,7 +904,7 @@ public class Config {
 						String list = line.getOptionValue("strip-path");
 						setStripPath(list);
 					} else {
-						logger.info("There's no prefix to strip from file pathnames.");
+						_logger.info("There's no prefix to strip from file pathnames.");
 					}
 				}
 
@@ -784,10 +914,10 @@ public class Config {
 				{
 					if (line.hasOption("output-tag")) {
 						String tag = line.getOptionValue("output-tag");
-						logger.info("Changing from the CLI option the output tag to " + tag);
+						_logger.info("Changing from the CLI option the output tag to " + tag);
 						setOutputTag(tag);
 					} else {
-						logger.info("There's no output tag defined, using default output folder in intermediate directory.");
+						_logger.info("There's no output tag defined, using default output folder in intermediate directory.");
 					}
 				}
 
@@ -797,10 +927,13 @@ public class Config {
 				{
 					if (line.hasOption("all")) {
 						if (availableCheckers.size() == 0) {
-							logger.error("There's no available checkers. Check that the configuration directory.");
+							_logger.error("There's no available checkers. Check that the configuration directory.");
 							result = false;
 						} else {
 							result = enableAllCheckers();
+							if (!result) {
+								_logger.error("Enabling all checkers failed.");
+							}
 						}
 					}
 				}
@@ -812,10 +945,10 @@ public class Config {
 						for (String checkerName : checkerNameList) {
 							Checker checker = enableChecker(checkerName);
 							if (checker == null) {
-								logger.error("Unable to enable checker: " + checkerName);
+								_logger.error("Unable to enable checker: " + checkerName);
 								result = false;
 							} else {
-								logger.info("Manually activating checker: " + checker.toString());
+								_logger.info("Manually activating checker: " + checker.toString());
 							}
 						}
 					}
@@ -834,24 +967,24 @@ public class Config {
 									Double threshold = Double.parseDouble(list[2]);
 									Checker checker = getEnabledChecker(checkerName);
 									if (checker == null) {
-										logger.info("Enabling checker for configuring it.");
+										_logger.info("Enabling checker for configuring it.");
 										checker = enableChecker(checkerName);
 									}
 									if (checker != null) {
 										if (checker.hasMetric(metricName)) {
 											checker.setThreshold(metricName, threshold);
-											logger.info("Threshold for metric " + metricName + " in checker " + checkerName + " changed to "
+											_logger.info("Threshold for metric " + metricName + " in checker " + checkerName + " changed to "
 													+ threshold);
 										} else {
-											logger.error("Unknown metric name " + metricName + " for checker " + checkerName);
+											_logger.error("Unknown metric name " + metricName + " for checker " + checkerName);
 											result = false;
 										}
 									} else {
-										logger.error("Unable to find or enable the checker " + checkerName);
+										_logger.error("Unable to find or enable the checker " + checkerName);
 										result = false;
 									}
 								} catch (NumberFormatException e) {
-									logger.error(
+									_logger.error(
 											"Unable to parse metric threshold for checker " + checkerName + " and metric " + metricName);
 									result = false;
 								}
@@ -862,7 +995,7 @@ public class Config {
 
 				{
 					if (!line.hasOption("disable-default") && !line.hasOption("enable-checker")) {
-						logger.info("No specific checker enabled and no disable all option, enabling all checkers.");
+						_logger.info("No specific checker enabled and no disable all option, enabling all checkers.");
 						result = enableAllCheckers();
 					}
 				}
@@ -875,7 +1008,7 @@ public class Config {
 					if (new File(value).isDirectory()) {
 						setIDIR(value);
 					} else {
-						logger.error("Bad intermediate directory specified (not a directory) : '" + value + "'");
+						_logger.error("Bad intermediate directory specified (not a directory) : '" + value + "'");
 						result = false;
 					}
 				}
@@ -886,18 +1019,18 @@ public class Config {
 				if (line.hasOption("output")) {
 					reportFile = line.getOptionValue("output");
 				} else {
-					logger.error("No output file specified for the report,using default " + reportFile);
+					_logger.warn("No output file specified for the report,using default " + reportFile);
 					result = false;
 
 				}
 
 			} catch (ParseException exp) {
 				// oops, something went wrong
-				logger.error("Parsing failed.  Reason: " + exp.getMessage());
+				_logger.error("Parsing failed.  Reason: " + exp.getMessage());
 				result = false;
 			}
 		} else {
-			logger.error("No command line provided.");
+			_logger.error("No command line provided.");
 			System.err.println(getStandardBanner());
 			System.err.println("Use --help for usage information.");
 			result = true;
@@ -918,7 +1051,7 @@ public class Config {
 			if (result) {
 				JsonNode root = Utils.getJsonNodeFromFile(jsonFileName);
 				if (root != null) {
-					logger.info("Start loading configuration from " + jsonFileName);
+					_logger.info("Start loading configuration from " + jsonFileName);
 
 					// Load config name
 					Utils.getFieldAsText(root, "name", "", s -> setName(s));
@@ -947,7 +1080,7 @@ public class Config {
 						if (checkersNode.isArray()) {
 							for (JsonNode node : checkersNode) {
 								String checkerName = Utils.getFieldAsText(node, "name", "", null);
-								logger.info("Attempting to enable checker " + checkerName);
+								_logger.info("Attempting to enable checker " + checkerName);
 								Checker checker = enableChecker(checkerName);
 								if (checker != null) {
 									JsonNode thresholdsNode = node.get("thresholds");
@@ -959,45 +1092,45 @@ public class Config {
 												// TODO Check that there's no metric that can possibly generates a -1 value in Coverity.
 												double value = Utils.getFieldAsDouble(thresholdNode, "value", -1, null);
 												if (value != -1) {
-													logger.info("Changing default threshold for " + metricName + " to " + value);
+													_logger.info("Changing default threshold for " + metricName + " to " + value);
 													checker.setThreshold(metricName, value);
 												} else {
 													result = false;
-													logger.error("Invalid value for metric " + metricName + " = " + value);
+													_logger.error("Invalid value for metric " + metricName + " = " + value);
 												}
 											} else {
 												result = false;
-												logger.error("Undefined metric name.");
+												_logger.error("Undefined metric name.");
 											}
 										}
 									} else {
-										logger.warn("Missing thresholds, using default ones for checker " + checkerName);
+										_logger.warn("Missing thresholds, using default ones for checker " + checkerName);
 									}
 								} else {
-									logger.error("Unknown checker " + checkerName);
+									_logger.error("Unknown checker " + checkerName);
 									result = false;
 								}
 								if (result) {
-									logger.info("Checker successfully enabled and configured: " + checker);
+									_logger.info("Checker successfully enabled and configured: " + checker);
 								}
 							}
 						} else {
-							logger.error("Bad syntax, missing list of enabled checkers in tag checkers");
+							_logger.error("Bad syntax, missing list of enabled checkers in tag checkers");
 							result = false;
 						}
 					} else {
-						logger.error("Unable to load checker configuration.");
+						_logger.error("Unable to load checker configuration.");
 						result = false;
 					}
 				}
 			} else {
 				// The given filename doesn't point to a file
-				logger.error("Missing file at " + jsonFileName);
+				_logger.error("Missing file at " + jsonFileName);
 				result = false;
 			}
 		} else {
 			// No filename is given
-			logger.error("No file provided");
+			_logger.error("No file provided");
 			result = false;
 		}
 

@@ -1,0 +1,26 @@
+{
+    "checker": "METRICS.MODULE_HAS_TOO_MANY_FUNCTIONS",
+    "extra": "metric_violation",
+    "file": "${file}",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Writing module with too many functions is harder to maintain. This component has ${func_count} functions which is above the threshold ${func_count.threshold}.",
+      "localEffect": "Hard to maintain module",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "${file}",
+        "linkUrl": "",
+        "linkText": "",
+        "description": "The number of function in module ${module} is ${func_count} which is above the threshold ${func_count.threshold}.",
+        "line": 0,
+        "main": true
+      }
+    ]
+ }

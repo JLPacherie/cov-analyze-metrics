@@ -1,8 +1,8 @@
 {
     "checker": "METRICS.CCM_TOO_HIGH",
     "extra": "metric_violation",
-    "file": "${fileName}",
-    "function": "${funcName}",
+    "file": "${file}",
+    "function": "${function}",
     "subcategory": "code_quality",
     "properties": {
       "type": "CCM too high",
@@ -15,7 +15,7 @@
     "events": [
       {
         "tag": "CCM metric violation",
-        "file": "${fileName}",
+        "file": "${file}",
         "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
         "linkText": "Wikipedia on CCM",
         "description": "The Cyclomatic Complexity Measure (MacCabe) is ${ccm} which is above the threshold ${ccm.threshold}.",

@@ -1,0 +1,26 @@
+{
+    "checker": "METRICS.FILE_HAS_TOO_MANY_FUNCTIONS",
+    "extra": "metric_violation",
+    "file": "${file}",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Implementing too many functions in a same file is harder to maintain. This file has ${count} functions which is above the threshold ${count.threshold}.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "${file}",
+        "linkUrl": "",
+        "linkText": "",
+        "description": "The number of functions in file ${file} is ${count} which is above the threshold ${count.threshold}.",
+        "line": 0,
+        "main": true
+      }
+    ]
+ }

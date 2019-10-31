@@ -1,8 +1,8 @@
  {
     "checker": "METRICS.LOC_TOO_HIGH",
     "extra": "metric_violation",
-    "file": "${fileName}",
-    "function": "${funcName}",
+    "file": "${file}",
+    "function": "${function}",
     "subcategory": "code_quality",
     "properties": {
       "type": "LOC too high",
@@ -15,7 +15,7 @@
     "events": [
       {
         "tag": "LOC metric violation",
-        "file": "${fileName}",
+        "file": "${file}",
         "description": "The LOC is ${loc} above ${loc.threshold}.",
         "line": ${ml},
         "main": true
