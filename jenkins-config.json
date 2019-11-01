@@ -16,7 +16,7 @@
 	"coverity": {
 		// Does Coverity analysis needed for this project ?
 		"enabled": true,
-		// Overweritte default version
+		// Overweritte default version of coverity analysis engine
 		"version": "last",
 	},
 

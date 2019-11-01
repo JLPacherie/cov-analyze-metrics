@@ -1,8 +1,9 @@
 tmp
 
 logs/
-
 target/
+.scannerwork/
+.idea/
 
 out/
 

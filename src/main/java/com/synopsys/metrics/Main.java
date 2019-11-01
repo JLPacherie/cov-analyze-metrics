@@ -268,7 +268,7 @@ public class Main {
 			Map<String, Integer> countBy = new HashMap<>();
 			for (Defect defect : defects) {
 				String src = defect.measured.getSourcesLabel();
-				countBy.compute(src, (k, v) -> (v == null) ? new Integer(1) : v + 1);
+				countBy.compute(src, (k, v) -> (v == null) ? Integer.valueOf(1) : v + 1);
 			}
 
 			System.out.println("Defects count by file");
@@ -283,7 +283,7 @@ public class Main {
 		// ----------------------------------------------------------------------------------------------------------------
 		{
 			try (FileOutputStream os = new FileOutputStream(config.getReportFile());
-					Writer writer = new OutputStreamWriter(os);) {
+					Writer writer = new OutputStreamWriter(os,"UTF8");) {
 
 				writer.write("\n" + "{\n" + "\t\"header\" : {\n" + "\t\t\"version\" : 1,\n"
 						+ "\t\t\"format\" : \"cov-import-results input\" \n" + "\t},\n" + "\t\n" + "\t\"issues\": [\n");

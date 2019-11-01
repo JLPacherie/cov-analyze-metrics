@@ -183,10 +183,9 @@ public class Config {
 		String result = null;
 		URI uri = null;
 		try {
-			uri = Config.class.getResource(path).toURI();
+			URL url = Config.class.getResource(path); 
+			uri = (url != null) ? url.toURI() : null;
 		} catch (URISyntaxException e) {
-			_logger.error("Unable to create URI from Jar " + e.getMessage());
-		} catch (NullPointerException e) {
 			_logger.error("Unable to create URI from Jar " + e.getMessage());
 		}
 
@@ -332,13 +331,12 @@ public class Config {
 			String folderPath = "/checkers";
 			URI uri = null;
 			try {
-				uri = Config.class.getResource(folderPath).toURI();
+				URL url = Config.class.getResource(folderPath); 
+				uri = (url != null) ? url.toURI() : null;
 			} catch (URISyntaxException e) {
 				_logger.error("Unable to create URI from Jar " + e.getMessage());
-			} catch (NullPointerException e) {
-				_logger.error("Unable to create URI from Jar " + e.getMessage());
 			}
-
+			
 			if (uri == null) {
 				_logger.error("Unable to initialize configuration without a config directory specified.");
 				result = false;
@@ -553,6 +551,10 @@ public class Config {
 		return result;
 	}
 
+	public boolean isValidCheckerName(String name) {
+		return name != null && !name.isEmpty();
+	}
+	
 	//
 	// ******************************************************************************************************************
 	//
@@ -567,10 +569,10 @@ public class Config {
 	 */
 	public Checker enableChecker(String name) {
 
-		assert (name != null) && (!name.isEmpty()) : "Invalid checker name to enable: " + name;
-		assert getAvailableChecker(name) != null : "No checker available with name: " + name;
-		assert getEnabledChecker(name) == null : "Checker already enabled: " + name;
-
+		if (!isValidCheckerName(name)) {
+			throw new IllegalArgumentException("Checker's name must be non null and not empty");
+		}
+		
 		Checker checker = getAvailableChecker(name);
 		if ((checker != null) && (checker.isValid())) {
 			enabledCheckers.add(checker);
@@ -578,16 +580,23 @@ public class Config {
 			_logger.info("Adding checker " + checker);
 		} else {
 			_logger.error("Invalid checker submitted to configuration " + checker);
-			checker = null;
+			throw new IllegalArgumentException("Checker to enabled is unknown : " + name);
 		}
-
-		assert (checker == null) || getAvailableChecker(name) == null : "Enabled checker still available with name: "
-				+ name;
-		assert (checker == null) || getEnabledChecker(name) != null : "Enabled checker not actually enabled: " + name;
 
 		return checker;
 	}
 
+	public boolean isEnabled(String checkerName) {
+		if (isValidCheckerName(name)) {
+			throw new IllegalArgumentException("Checker's name must be non null and not empty");
+		}
+		return enabledCheckers().filter(c -> checkerName.equals(c.getName())).findFirst().orElse(null) != null;
+	}
+	
+	public Stream<Checker> enabledCheckers() {
+		return enabledCheckers.stream();
+	}
+	
 	//
 	// ******************************************************************************************************************
 	//
@@ -600,6 +609,9 @@ public class Config {
 	 * @return The available checker matching the name or null.
 	 */
 	public Checker getAvailableChecker(String name) {
+		if (!isValidCheckerName(name)) {
+			throw new IllegalArgumentException("Checker's name must be non null and not empty");
+		}
 		Checker result = null;
 		if (name != null)
 			result = availableCheckers.stream().filter(c -> name.equals(c.getName())).findFirst().orElse(null);
@@ -892,7 +904,7 @@ public class Config {
 							}
 						}
 					} else {
-						_logger.info("There's file pathname exclusion patterns.");
+						_logger.info("There's no file pathname exclusion patterns.");
 					}
 				}
 
@@ -1020,8 +1032,6 @@ public class Config {
 					reportFile = line.getOptionValue("output");
 				} else {
 					_logger.warn("No output file specified for the report,using default " + reportFile);
-					result = false;
-
 				}
 
 			} catch (ParseException exp) {
