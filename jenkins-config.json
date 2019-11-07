@@ -13,6 +13,10 @@
 		"cov-java-webapp.json"  // Additional Coverity definitions for Java/JS based webapp
 	],
 
+	// **************************************************************************
+	// Coverity SAST Configuration for this project (overwrites standard ones)
+	// **************************************************************************
+	
 	"coverity": {
 		// Does Coverity analysis needed for this project ?
 		"enabled": true,
@@ -20,10 +24,16 @@
 		"version": "last",
 	},
 
+	// **************************************************************************
+	// BlackDuck SCA Configuration for this project (overwrites standard ones)
+	// **************************************************************************
 	"blackduck": {
 		"enabled": true
 	},
 
+	// **************************************************************************
+	// Project Specific Build Configuration for this project
+	// **************************************************************************
 	"project": {
 		
 		// The name of the project
@@ -32,11 +42,18 @@
 		// The version name of the project
 		"version": "2019.09",
 		
-		// A RegEx pattern to find the prohect artefacts
-		"artifacts": "${.project.path}/target/*.jar",
-
-		// Where's is located (checked-out) the project inthe Workspace
+		// Where's is located (checked-out) the project in the Workspace
 		"path": "project",
+
+		// Where are located the source code. Used by SCA for source code
+		"sources": [
+			"src/main"
+		],
+
+		// Where are located the target artifacts. Used by SCA for Binary
+		"targets": [
+			"target/*dependencies*.jar"
+		],
 
 		//
 		// Configuration of the project build.
