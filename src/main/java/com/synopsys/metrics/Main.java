@@ -1,24 +1,29 @@
 package com.synopsys.metrics;
 
-import org.apache.commons.io.IOUtils;
+import static java.util.stream.Collectors.joining;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.XMLEvent;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.synopsys.sipm.model.Parameter;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import java.util.zip.GZIPInputStream;
-
-import static java.util.stream.Collectors.joining;
 
 public class Main {
 
@@ -55,33 +60,47 @@ public class Main {
 
 	/** Extract from given file the XML segment for Function metrics, returns unparsed FuncMetrics. */
 	public Iterator<FuncMetrics> getFunctionMetricIter(String filename) {
-
+		FuncMetricsIter result = null;
+		try {
+			result = new FuncMetricsIter(filename);
+		} catch (Exception e) {
+			// TODO: handle exception
+			if (result != null) {
+				try {
+					result.close();
+				} catch (IOException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+			}
+		}
+		return result;
+		/*
 		XMLInputFactory xmlif = XMLInputFactory.newInstance();
 		if (xmlif.isPropertySupported("javax.xml.stream.isReplacingEntityReferences")) {
 			xmlif.setProperty("javax.xml.stream.isReplacingEntityReferences", Boolean.TRUE);
 		}
-
+		
 		try {
-
+		
 			InputStream xmlRootPrefix = IOUtils.toInputStream("<root>", Charset.forName("UTF8"));
 			InputStream fileStream = new FileInputStream(config.getFunctionsFileName());
 			InputStream gzipStream = new GZIPInputStream(fileStream);
 			InputStream xmlRootSuffix = IOUtils.toInputStream("</root>", Charset.forName("UTF8"));
-
+		
 			InputStream xmlInput = new SequenceInputStream(xmlRootPrefix, new SequenceInputStream(gzipStream, xmlRootSuffix));
-
+		
 			final XMLStreamReader xmlsr = xmlif.createXMLStreamReader(xmlInput);
-
+		
 			final String stripPath = config.getStripPath();
-
+		
 			return new Iterator<FuncMetrics>() {
-
+		
 				@Override
-				/** Move to the next fnmetrics tag or fails */
 				public boolean hasNext() {
 					boolean result = false;
 					try {
-
+		
 						result = (xmlsr != null) && xmlsr.hasNext();
 						if (result) {
 							result = false;
@@ -96,23 +115,22 @@ public class Main {
 					}
 					return result;
 				}
-
+		
 				@Override
-				/** Read the fnmetric record at current position. */
 				public FuncMetrics next() {
 					FuncMetrics result = new FuncMetrics();
 					boolean loaded = result.read(xmlsr);
 					while (!loaded && hasNext()) {
 						loaded = result.read(xmlsr);
 					}
-
+		
 					if ((loaded) && (!stripPath.isEmpty()) && result.getPathname().startsWith(stripPath)) {
 						result.setPathname(result.getPathname().substring(stripPath.length()));
 					}
 					return loaded ? result : null;
 				}
 			};
-
+		
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (XMLStreamException e) {
@@ -121,6 +139,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		return null;
+		*/
 	}
 
 	//
@@ -283,7 +302,7 @@ public class Main {
 		// ----------------------------------------------------------------------------------------------------------------
 		{
 			try (FileOutputStream os = new FileOutputStream(config.getReportFile());
-					Writer writer = new OutputStreamWriter(os,"UTF8");) {
+					Writer writer = new OutputStreamWriter(os, "UTF8");) {
 
 				writer.write("\n" + "{\n" + "\t\"header\" : {\n" + "\t\t\"version\" : 1,\n"
 						+ "\t\t\"format\" : \"cov-import-results input\" \n" + "\t},\n" + "\t\n" + "\t\"issues\": [\n");
