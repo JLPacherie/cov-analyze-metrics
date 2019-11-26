@@ -37,35 +37,6 @@ public class Main {
   protected static Logger logger = LogManager.getLogger(Main.class);
   protected Config config;
 
-  public void explicitNullDereference() {
-    String str = null;
-    String substr = str.substring(4);
-  }
-
-  public void osCommandInjectionSink(String[] args) {
-    try {
-      Runtime runtime = Runtime.getRuntime();
-      Process proc = runtime.exec("find" + " " + args[1]);
-
-      InputStream is = proc.getInputStream();
-      InputStreamReader isr = new InputStreamReader(is,"UTF-8");
-      BufferedReader br = new BufferedReader(isr);
-
-      String line;
-      while ((line = br.readLine()) != null) {
-        System.out.println(line);
-      }
-    } catch (IOException e) {
-
-    }
-  }
-
-  public void osCommandInjection(String[] args) {
-    String[] localArgs = { "Hello World" , "No Issue There"};
-    osCommandInjectionSink(localArgs);
-    
-    osCommandInjectionSink(args);
-  }
   public boolean init(String[] args) {
     
     logger.info("Creating a new configuration from the CLI options.");
@@ -193,7 +164,6 @@ public class Main {
     // ************************************
     // BUG
     // ************************************
-    main.osCommandInjection(args);
     main.init(args);
 
     Config config = main.config;
