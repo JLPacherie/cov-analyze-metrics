@@ -16,10 +16,8 @@
       {
         "tag": "Component size violation",
         "file": "${file}",
-        "linkUrl": "",
-        "linkText": "",
-        "description": "The number of function in module ${module} is ${func_count} which is above the threshold ${func_count.threshold}.",
-        "line": 0,
+        "description": "The total number of functions in module ${module} is ${func_count} which is above the threshold ${func_count.threshold}.",
+        "line": 1,
         "main": true
       }
     ]

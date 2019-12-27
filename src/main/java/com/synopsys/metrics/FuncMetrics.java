@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -33,6 +35,10 @@ public class FuncMetrics extends Measurable {
 		for (String tag : loadedTags) {
 			add(tag, "", Parameter.READ_WRITE);
 		}
+		add("fdir", null, Parameter.READ_WRITE);
+		add("fname", null, Parameter.READ_WRITE);
+		add("module", null, Parameter.READ_WRITE);
+		add("class", null, Parameter.READ_WRITE);
 	}
 
 	//
@@ -56,9 +62,24 @@ public class FuncMetrics extends Measurable {
 	}
 
 	public void setPathname(String value) {
-		if (value.indexOf("/") == -1)
-			_logger.warn("Suspicious pathname");
 		set("file", value);
+	}
+
+	public void autoset() {
+		String file = getPathname();
+		if (file != null) {
+			int pos = file.lastIndexOf(File.separatorChar);
+			if (pos == -1) {
+				_logger.warn("Suspicious pathname");
+			} else {
+				String dir = file.substring(0, pos);
+				String name = file.substring(pos + 1);
+				set("fdir", dir);
+				set("fname", name);
+				set("module", dir);
+				set("class", name);
+			}
+		}
 	}
 
 	//
@@ -159,6 +180,7 @@ public class FuncMetrics extends Measurable {
 
 		}
 
+		autoset();
 		return result;
 	}
 
@@ -177,20 +199,20 @@ public class FuncMetrics extends Measurable {
 		String[] metricsList = get("metrics", "").split(";");
 
 		if (metricsList.length == 0) {
-			_logger.error("There's no 'metrics' element associated to function in file " + getPathname());
+			_logger.error("There's no 'metrics' element associated to function in file {}", getPathname());
 		} else {
 			for (String metric : metricsList) {
 				String[] metricList = metric.split(":");
 				if (metricList.length == 2) {
 					if (metricList[0].equals("lc")) {
-						set(tagLOC, metricList[1]);
+						setMetrics(tagLOC, Double.parseDouble(metricList[1]));
 					} else if (metricList[0].equals("cc")) {
-						set(tagCCM, metricList[1]);
+						setMetrics(tagCCM, Double.parseDouble(metricList[1]));
 					} else {
-						add(metricList[0], metricList[1], Parameter.READ_WRITE);
+						addMetrics(metricList[0], Double.parseDouble(metricList[1]));
 					}
 				} else {
-					logger.error("Bad format for metrics : " + metric);
+					logger.error("Bad format for metrics : {}", metric);
 					result = false;
 				}
 			}

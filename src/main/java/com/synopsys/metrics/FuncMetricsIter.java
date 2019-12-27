@@ -65,6 +65,13 @@ public class FuncMetricsIter implements Iterator<FuncMetrics>, Closeable {
 		xmlInput = new SequenceInputStream(xmlRootPrefix, new SequenceInputStream(gzipStream, xmlRootSuffix));
 
 		xmlif = XMLInputFactory.newInstance();
+
+		// disable resolving of external DTD entities
+		xmlif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+
+		// or disallow DTDs entirely
+		xmlif.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+
 		if (xmlif.isPropertySupported("javax.xml.stream.isReplacingEntityReferences")) {
 			xmlif.setProperty("javax.xml.stream.isReplacingEntityReferences", Boolean.TRUE);
 		}
@@ -85,7 +92,7 @@ public class FuncMetricsIter implements Iterator<FuncMetrics>, Closeable {
 					result = eventType == XMLEvent.START_ELEMENT && "fnmetric".equals(xmlsr.getName().getLocalPart());
 				}
 			} else {
-				
+
 			}
 		} catch (XMLStreamException e) {
 			e.printStackTrace();
@@ -119,6 +126,5 @@ public class FuncMetricsIter implements Iterator<FuncMetrics>, Closeable {
 		if (xmlInput != null)
 			xmlInput.close();
 	}
-
 
 }

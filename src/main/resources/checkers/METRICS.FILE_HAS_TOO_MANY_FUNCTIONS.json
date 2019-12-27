@@ -1,20 +1,20 @@
 {
   // Version of the syntax for this checker.
   "version": "1.0",
-  // The name of the checker as to appear in Coverity defects
+  // The name of the checker to appear in Coverity defects
   "name": "METRICS.FILE_HAS_TOO_MANY_FUNCTIONS",
-  // A short and generic descrption of the checker purpose
+  // A short and generic description of the checker purpose
   "description": "Detects files implementing too many functions",
-  // The list of the metrics in Coverity with their associated default tresholds
+  // The list of the metrics in Coverity with their associated default thresholds
   "thresholds": [
     {
       // The threshold applies only to Function metrics.
     	"scope": "File Metrics",
-      // The name of the theshold the user can adjust from the CLI
+      // The name of the threshold the user can adjust from the CLI
       "name": "count",
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
       "metrics": "count",
-      // The default theshold
+      // The default threshold
       "threshold": 50
     }
   ],

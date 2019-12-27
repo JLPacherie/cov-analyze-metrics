@@ -23,6 +23,7 @@ import javax.xml.stream.events.XMLEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.hazelcast.internal.metrics.metricsets.FileMetricSet;
 import com.synopsys.sipm.model.Parameter;
 
 public class Main {
@@ -187,77 +188,116 @@ public class Main {
 		// ----------------------------------------------------------------------------------------------------------------
 		// Initialize the collection of Measurable objects with the Function Metrics extracted from Coverity metrics file
 		// ----------------------------------------------------------------------------------------------------------------
-		_logger.debug("Collecting all function metrics from " + inputMetricFileName);
-		List<Measurable> measurableList = new ArrayList<Measurable>();
-		main.getParsedStream(inputMetricFileName).forEach(m -> measurableList.add(m));
-		_logger.debug("Parsing input file metrics found " + measurableList.size() + " functions with metrics.");
+		_logger.debug("Collecting all function metrics from {}", inputMetricFileName);
+		List<FuncMetrics> funcMeasures = new ArrayList<>();
+		main.getParsedStream(inputMetricFileName).forEach(m -> funcMeasures.add(m));
+		_logger.debug("Parsing input file metrics found {} functions with metrics.", funcMeasures.size());
 
 		// ----------------------------------------------------------------------------------------------------------------
 		// Add to the collection of Measurable objects the aggregated function metrics for a same file
 		// ----------------------------------------------------------------------------------------------------------------
+		HashMap<String, CompositeMetrics> fileMetrics = new HashMap<>();
+		HashMap<String, CompositeMetrics> moduleMetrics = new HashMap<>();
 		{
 			_logger.debug("Aggregating function metrics by files and modules");
-			Map<String, List<Measurable>> byFileMeasures = new HashMap<>();
-			Map<String, List<Measurable>> byModuleMeasures = new HashMap<>();
+			Map<String, List<FuncMetrics>> fileMeasures = new HashMap<>();
+			Map<String, List<FuncMetrics>> moduleFuncMetrics = new HashMap<>();
 
-			for (Measurable m : measurableList) {
-				if (m instanceof FuncMetrics) {
-					FuncMetrics fMetrics = (FuncMetrics) m;
+			for (FuncMetrics fMetrics : funcMeasures) {
 
-					String fileLabel = fMetrics.getPathname();
-					List<Measurable> byFileList = byFileMeasures.get(fileLabel);
-					if (byFileList == null) {
-						byFileList = new ArrayList<Measurable>();
-						byFileMeasures.put(fileLabel, byFileList);
-					}
-					byFileList.add(fMetrics);
+				String fileLabel = fMetrics.getPathname();
+				List<FuncMetrics> byFileList = fileMeasures.get(fileLabel);
+				if (byFileList == null) {
+					byFileList = new ArrayList<>();
+					fileMeasures.put(fileLabel, byFileList);
+				}
+				byFileList.add(fMetrics);
 
-					String className = fMetrics.getClassName();
-					String moduleLabel = fMetrics.getClassName();
-					List<Measurable> byModuleList = byModuleMeasures.get(moduleLabel);
-					if (byModuleList == null) {
-						byModuleList = new ArrayList<Measurable>();
-						byModuleMeasures.put(moduleLabel, byModuleList);
-					}
-					byModuleList.add(fMetrics);
+				String className = fMetrics.getClassName();
+				String moduleLabel = fMetrics.getModuleName();
+
+				List<FuncMetrics> byModuleList = moduleFuncMetrics.get(moduleLabel);
+				if (byModuleList == null) {
+					byModuleList = new ArrayList<>();
+					moduleFuncMetrics.put(moduleLabel, byModuleList);
+				}
+				byModuleList.add(fMetrics);
+
+			}
+
+			//
+			// Remove common prefixes on file names
+			//
+			if (!funcMeasures.isEmpty()) {
+
+				funcMeasures.sort((m1, m2) -> m1.getSourcesLabel().compareTo(m2.getSourcesLabel()));
+
+				HashMap<String, Integer> prefixes = new HashMap<>();
+				String prefix = funcMeasures.get(0).getSourcesLabel();
+				int iFile = 1;
+				int nbMatches = 0;
+				while ((!prefix.isEmpty()) && (iFile < funcMeasures.size())) {
+
+					String fileName = funcMeasures.get(iFile).getSourcesLabel();
+					String pathName = fileName.substring(0, fileName.lastIndexOf('/'));
+					//_logger.debug("File {} has module {}", funcMeasures.get(iFile).getPathname(),
+					//		funcMeasures.get(iFile).getModuleName());
+
+					prefixes.compute(pathName, (k, v) -> (v == null) ? Integer.valueOf(1) : v + 1);
+
+					iFile++;
+				}
+
+				prefixes.entrySet().forEach(item -> {
+					_logger.debug("Prefix {} has {} macthes", item.getKey(), item.getValue());
+				});
+
+				if (!prefixes.isEmpty()) {
 
 				}
 			}
+			_logger.debug("Found metrics for {} different files.", fileMeasures.size());
+			_logger.debug("Found metrics for {} different modules.", moduleFuncMetrics.size());
 
-			_logger.debug("Found metrics for " + byFileMeasures.size() + " different files");
-			_logger.debug("Found metrics for " + byModuleMeasures.size() + " different modules");
-
-			for (Map.Entry<String, List<Measurable>> entry : byFileMeasures.entrySet()) {
+			//
+			// For each file listed in the sources of the function metrics, we collect the metrics for
+			// each of the functions into a single 'file' composite metric.
+			//
+			for (Map.Entry<String, List<FuncMetrics>> entry : fileMeasures.entrySet()) {
 				String fileLabel = entry.getKey();
-				_logger.debug("Adding a file metrics for " + fileLabel);
-				CompositeMetrics metrics = new CompositeMetrics("File Metrics");
+				FileMetrics metrics = new FileMetrics("File Metrics");
 				for (Measurable m : entry.getValue()) {
 					metrics.add(m);
 				}
 				metrics.add("file", fileLabel, Parameter.READ_WRITE);
-				measurableList.add(metrics);
-				_logger.debug("Registered " + entry.getValue().size() + " funtions in that file.");
+				fileMetrics.put(fileLabel, metrics);
+				_logger.debug("Registered {} functions in file {}.", entry.getValue().size(), fileLabel);
 			}
 
-			for (Map.Entry<String, List<Measurable>> entry : byModuleMeasures.entrySet()) {
+			//
+			//
+			//
+			for (Map.Entry<String, List<FuncMetrics>> entry : moduleFuncMetrics.entrySet()) {
 				String moduleLabel = entry.getKey();
-				_logger.debug("Adding a module metrics for " + moduleLabel);
-				CompositeMetrics metrics = new CompositeMetrics("Module Metrics");
+				ModuleMetrics metrics = new ModuleMetrics("Module Metrics");
 				for (Measurable m : entry.getValue()) {
 					metrics.add(m);
 				}
 				metrics.add("file", metrics.getSourcesLabel(), Parameter.READ_WRITE);
 				metrics.add("module", moduleLabel, Parameter.READ_WRITE);
-				measurableList.add(metrics);
-				_logger.debug("Registered " + entry.getValue().size() + " functions in that module.");
+				moduleMetrics.put(moduleLabel, metrics);
+				_logger.debug("Registered {} functions in module {}", entry.getValue().size(), moduleLabel);
 			}
 
 		}
 		// ----------------------------------------------------------------------------------------------------------------
 		// Collecting defect results.
 		// ----------------------------------------------------------------------------------------------------------------
-		List<Defect> defects = measurableList.parallelStream() //
-				.filter(fnMetrics -> config.filter(fnMetrics))// TODO Checker.check implementation to implement filtering ?
+		Stream<Measurable> allMeasures = Stream.concat(funcMeasures.stream(), //
+				Stream.concat(fileMetrics.values().stream(), moduleMetrics.values().stream()));
+
+		List<Defect> defects = allMeasures.parallel() //
+				.filter(measurable -> config.filter(measurable)) // Checker.check implementation to implement filtering ?
 				.flatMap(measurable -> config.check(measurable))// Each measured item may trigger multiple defects
 				.collect(Collectors.toList());
 
@@ -287,6 +327,13 @@ public class Main {
 			Map<String, Integer> countBy = new HashMap<>();
 			for (Defect defect : defects) {
 				String src = defect.measured.getSourcesLabel();
+				if (defect.measured instanceof FuncMetrics) {
+					src = "[FUNCTION]  " + src;
+				} else if (defect.measured instanceof ModuleMetrics) {
+					src = "[MODULE]    " + src;
+				} else if (defect.measured instanceof FileMetrics) {
+					src = "[FILE]      " + src;
+				}
 				countBy.compute(src, (k, v) -> (v == null) ? Integer.valueOf(1) : v + 1);
 			}
 
@@ -295,7 +342,7 @@ public class Main {
 					.forEach(e -> System.out.printf("\t%8d %s\n", e.getValue(), e.getKey()));
 		}
 
-		_logger.info("Found " + defects.size() + " defects.");
+		_logger.info("Found {} defects.", defects.size());
 
 		// ----------------------------------------------------------------------------------------------------------------
 		// Build the JSON file for cov-import-results
@@ -319,15 +366,16 @@ public class Main {
 					} else {
 						_logger.error("Unable to retreive JSON excerpt for defect");
 					}
-					iDefect++;
-
 				}
 
 				// End of JSON segments for defects and beginning of the array for source files.
 				writer.write("\n\t],\n" + "\t\"sources\": [\n");
 
+				
 				String json = defects.stream()//
 						.map(defect -> defect.measured.getSourcesLabel())//
+						.flatMap(strList -> Stream.of(strList.split(",")))
+						.sorted() //
 						.distinct() //
 						.map(path -> "\t\t{ \"file\": \"" + path + "\", \"encoding\": \"ASCII\" }")//
 						.collect(joining(",\n"));

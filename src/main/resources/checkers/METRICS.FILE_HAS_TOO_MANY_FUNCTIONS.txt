@@ -16,10 +16,8 @@
       {
         "tag": "Component size violation",
         "file": "${file}",
-        "linkUrl": "",
-        "linkText": "",
         "description": "The number of functions in file ${file} is ${count} which is above the threshold ${count.threshold}.",
-        "line": 0,
+        "line": 1,
         "main": true
       }
     ]

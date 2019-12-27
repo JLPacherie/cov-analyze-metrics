@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -42,6 +43,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.synopsys.metrics.checkers.ModuleHasTooManyFiles;
 import com.synopsys.metrics.checkers.ModuleHasTooManyFunctions;
 
 /**
@@ -63,6 +65,7 @@ public class Config {
 	protected String outputTag = "";
 	protected String stripPath = "";
 	protected String reportFile = "cov-metrics-report.json";
+	protected String metricsFileName = null;
 
 	private Options options = null;
 
@@ -74,12 +77,12 @@ public class Config {
 	/**
 	 * The list of enabled checkers by the current configuration.
 	 */
-	public List<Checker> enabledCheckers = new ArrayList<Checker>();
+	public List<Checker> enabledCheckers = new ArrayList<>();
 
 	/**
 	 * The list of all available checkers (and not yet enabled).
 	 */
-	public List<Checker> availableCheckers = new ArrayList<Checker>();
+	public List<Checker> availableCheckers = new ArrayList<>();
 
 	// ------------------------------------------------------------------------------------------------------------------
 	// Constructors.
@@ -105,7 +108,7 @@ public class Config {
 	public Config(String jsonFileName) {
 		boolean status = jsonLoad(jsonFileName);
 		if (!status) {
-			_logger.error("Initialization of configuration failed from file " + jsonFileName);
+			_logger.error("Initialization of configuration failed from file {}", jsonFileName);
 		}
 	}
 
@@ -131,6 +134,9 @@ public class Config {
 					.desc("Specify the JSON configuration file").build());
 
 			options.addOption(Option.builder().required(false).longOpt("dir").numberOfArgs(1)
+					.desc("Specify the Coverity intermediate directory").build());
+
+			options.addOption(Option.builder().required(false).longOpt("metrics").numberOfArgs(1)
 					.desc("Specify the Coverity intermediate directory").build());
 
 			options.addOption(Option.builder("cd").required(false).longOpt("config-dir").numberOfArgs(1)
@@ -183,10 +189,10 @@ public class Config {
 		String result = null;
 		URI uri = null;
 		try {
-			URL url = Config.class.getResource(path); 
+			URL url = Config.class.getResource(path);
 			uri = (url != null) ? url.toURI() : null;
 		} catch (URISyntaxException e) {
-			_logger.error("Unable to create URI from Jar " + e.getMessage());
+			_logger.error("Unable to create URI from Jar {}", e.getMessage());
 		}
 
 		if (uri == null) {
@@ -197,11 +203,12 @@ public class Config {
 			// Load the resource from the executable JAR
 			//
 			if (uri.getScheme().contains("jar")) {
-				try {
-					URL jar = Config.class.getProtectionDomain().getCodeSource().getLocation();
-					Path jarFile = Paths.get(jar.toString().substring("file:".length()));
-					FileSystem fs = FileSystems.newFileSystem(jarFile, null);
-					DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(path));
+
+				URL jar = Config.class.getProtectionDomain().getCodeSource().getLocation();
+				Path jarFile = Paths.get(jar.toString().substring("file:".length()));
+
+				try (FileSystem fs = FileSystems.newFileSystem(jarFile, null);
+						DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(path));) {
 
 					HashMap<String, InputStream> allStreams = new HashMap<>();
 					for (Path p : directoryStream) {
@@ -209,22 +216,20 @@ public class Config {
 						if (is != null) {
 							allStreams.put(p.getFileName().toString(), is);
 						} else {
-							_logger.debug("Unable to create input stream for path " + p.toString());
+							_logger.debug("Unable to create input stream for path {}", p.toString());
 						}
 					}
 
 					for (HashMap.Entry<String, InputStream> entry : allStreams.entrySet()) {
 						if (entry.getKey().equals(resource)) {
-							try {
-								result = IOUtils.toString(entry.getValue(), "UTF8");
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
+							result = IOUtils.toString(entry.getValue(), "UTF8");
 						}
 					}
 
 				} catch (IOException e) {
-					_logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
+					_logger.error("Unable to load checker definition from Jar {}", e.getLocalizedMessage());
+					e.printStackTrace();
+
 				}
 
 			}
@@ -244,16 +249,14 @@ public class Config {
 						if (listFiles != null) {
 							for (File nextFile : listFiles) {
 								if (nextFile.getPath().endsWith(path + "/" + resource)) {
-									try {
-										result = FileUtils.readFileToString(nextFile, "UTF8");
-									} catch (IOException e) {
-										e.printStackTrace();
-									}
+									result = FileUtils.readFileToString(nextFile, "UTF8");
 								}
 							}
 						}
 					}
-				} catch (URISyntaxException e) {
+				} catch (IOException e1) {
+				} catch (URISyntaxException e2) {
+					e2.printStackTrace();
 				}
 			}
 		}
@@ -270,18 +273,40 @@ public class Config {
 	public boolean init() {
 		boolean result = true;
 
-		_logger.info("Initializing configuration " + getName());
+		_logger.info("Initializing configuration {}", getName());
 
-		_logger.info("Clearing list of " + enabledCheckers.size() + " enabled checkers.");
+		_logger.info("Clearing list of {} enabled checkers.", enabledCheckers.size());
 		enabledCheckers.clear();
 
-		_logger.info("Clearing list of " + availableCheckers.size() + " available checkers.");
+		_logger.info("Clearing list of {} available checkers.", availableCheckers.size());
 		availableCheckers.clear();
+
 		{
 			ModuleHasTooManyFunctions checker = new ModuleHasTooManyFunctions();
+
 			String tmplDefectFile = checker.getJsonDefectTemplateFilename();
 			String tmplDefectJson = getResource("/checkers", tmplDefectFile);
 			checker.setJsonDefectTemplate(tmplDefectJson);
+
+			String tmplDefectEventFile = checker.getJsonDefectEventTemplateFilename();
+			String tmplDefectEventJson = getResource("/checkers", tmplDefectEventFile);
+			checker.setJsonDefectEventTemplate(tmplDefectEventJson);
+
+			if (checker.isValid())
+				availableCheckers.add(checker);
+		}
+
+		{
+			ModuleHasTooManyFiles checker = new ModuleHasTooManyFiles();
+
+			String tmplDefectFile = checker.getJsonDefectTemplateFilename();
+			String tmplDefectJson = getResource("/checkers", tmplDefectFile);
+			checker.setJsonDefectTemplate(tmplDefectJson);
+
+			String tmplDefectEventFile = checker.getJsonDefectEventTemplateFilename();
+			String tmplDefectEventJson = getResource("/checkers", tmplDefectEventFile);
+			checker.setJsonDefectEventTemplate(tmplDefectEventJson);
+
 			if (checker.isValid())
 				availableCheckers.add(checker);
 		}
@@ -291,7 +316,7 @@ public class Config {
 		// checker definitions might be found in files METRICS*.json
 		//
 		if (getConfigDir() != null) {
-			_logger.info("Loading  list of known checkers from " + getConfigDir());
+			_logger.info("Loading  list of known checkers from {}.", getConfigDir());
 			File cfgDir = new File(getConfigDir());
 			if (cfgDir.isDirectory()) {
 				WildcardFileFilter filter = new WildcardFileFilter("METRICS.*.json");
@@ -301,22 +326,40 @@ public class Config {
 					Checker checker = new Checker(checkerFile);
 					if (checker.isValid()) {
 						availableCheckers.add(checker);
-						String templateFile = checker.getJsonDefectTemplateFilename();
-						File f = new File(templateFile);
-						String template = "";
-						try {
-							template = FileUtils.readFileToString(f, "UTF8");
-						} catch (IOException e) {
-							e.printStackTrace();
+
+						{
+							String templateFile = checker.getJsonDefectTemplateFilename();
+							File f = new File(templateFile);
+							String template = "";
+							try {
+								template = FileUtils.readFileToString(f, "UTF8");
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							checker.setJsonDefectTemplate(template);
 						}
-						checker.setJsonDefectTemplate(template);
+
+						{
+							String templateFile = checker.getJsonDefectEventTemplateFilename();
+							File f = new File(templateFile);
+							if (f.exists()) {
+								String template = "";
+								try {
+									template = FileUtils.readFileToString(f, "UTF8");
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+								checker.setJsonDefectEventTemplate(template);
+							}
+						}
+
 					} else {
-						_logger.error("Unable to load checker from file " + checkerFile.getAbsolutePath());
+						_logger.error("Unable to load checker from file {}.", checkerFile.getAbsolutePath());
 						result = false;
 					}
 				}
 			} else {
-				_logger.error("No configuration directory found at " + cfgDirPath);
+				_logger.error("No configuration directory found at {}", cfgDirPath);
 				result = false;
 			}
 		}
@@ -331,12 +374,12 @@ public class Config {
 			String folderPath = "/checkers";
 			URI uri = null;
 			try {
-				URL url = Config.class.getResource(folderPath); 
+				URL url = Config.class.getResource(folderPath);
 				uri = (url != null) ? url.toURI() : null;
 			} catch (URISyntaxException e) {
-				_logger.error("Unable to create URI from Jar " + e.getMessage());
+				_logger.error("Unable to create URI from Jar {}", e.getMessage());
 			}
-			
+
 			if (uri == null) {
 				_logger.error("Unable to initialize configuration without a config directory specified.");
 				result = false;
@@ -346,11 +389,10 @@ public class Config {
 				// Load the checkers from the executable JAR
 				//
 				if (uri.getScheme().contains("jar")) {
-					try {
-						URL jar = Config.class.getProtectionDomain().getCodeSource().getLocation();
-						Path jarFile = Paths.get(jar.toString().substring("file:".length()));
-						FileSystem fs = FileSystems.newFileSystem(jarFile, null);
-						DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(folderPath));
+					URL jar = Config.class.getProtectionDomain().getCodeSource().getLocation();
+					Path jarFile = Paths.get(jar.toString().substring("file:".length()));
+					try (FileSystem fs = FileSystems.newFileSystem(jarFile, null);
+							DirectoryStream<Path> directoryStream = Files.newDirectoryStream(fs.getPath(folderPath));) {
 
 						HashMap<String, InputStream> allStreams = new HashMap<>();
 						for (Path p : directoryStream) {
@@ -358,28 +400,37 @@ public class Config {
 							if (is != null) {
 								allStreams.put(p.getFileName().toString(), is);
 							} else {
-								_logger.debug("Unable to create input stream for path " + p.toString());
+								_logger.debug("Unable to create input stream for path {}", p.toString());
 							}
 						}
 
-						for (HashMap.Entry<String, InputStream> entry : allStreams.entrySet()) {
+						for (Map.Entry<String, InputStream> entry : allStreams.entrySet()) {
 							if (entry.getKey().endsWith(".json")) {
 								Checker checker = new Checker(entry.getValue());
 								if (checker.isValid()) {
-									String templateFile = checker.getJsonDefectTemplateFilename();
-									for (HashMap.Entry<String, InputStream> entry2 : allStreams.entrySet()) {
-										if (entry2.getKey().endsWith(templateFile)) {
-											String template = "";
-
-											try {
-												template = IOUtils.toString(entry2.getValue(), "UTF8");
-											} catch (IOException e) {
-												e.printStackTrace();
+									{
+										String templateFile = checker.getJsonDefectTemplateFilename();
+										for (Map.Entry<String, InputStream> entry2 : allStreams.entrySet()) {
+											if (entry2.getKey().endsWith(templateFile)) {
+												String template = IOUtils.toString(entry2.getValue(), "UTF8");
+												if ((template != null) && !template.isEmpty()) {
+													checker.setJsonDefectTemplate(template);
+													availableCheckers.add(checker);
+												}
 											}
-
-											if ((template != null) && !template.isEmpty()) {
-												checker.setJsonDefectTemplate(template);
-												availableCheckers.add(checker);
+										}
+									}
+									{
+										{
+											String templateFile = checker.getJsonDefectEventTemplateFilename();
+											for (Map.Entry<String, InputStream> entry2 : allStreams.entrySet()) {
+												if (entry2.getKey().endsWith(templateFile)) {
+													String template = IOUtils.toString(entry2.getValue(), "UTF8");
+													if ((template != null) && !template.isEmpty()) {
+														checker.setJsonDefectEventTemplate(template);
+														availableCheckers.add(checker);
+													}
+												}
 											}
 										}
 									}
@@ -388,7 +439,8 @@ public class Config {
 						}
 
 					} catch (IOException e) {
-						_logger.error("Unable to load checker definition from Jar" + e.getLocalizedMessage());
+						e.printStackTrace();
+						_logger.error("Unable to load checker definition from Jar {}", e.getLocalizedMessage());
 					}
 
 				}
@@ -411,23 +463,42 @@ public class Config {
 									if (nextFile.getPath().endsWith(".json")) {
 										Checker checker = new Checker(nextFile);
 										if (checker.isValid()) {
-											_logger.info("Loading checker definition from " + nextFile.getName());
+											_logger.info("Loading checker definition from {}", nextFile.getName());
 											availableCheckers.add(checker);
-											String templateFile = checker.getJsonDefectTemplateFilename();
-											URL tURL = Config.class.getResource("/checkers/" + templateFile);
-											if (tURL != null) {
-												String template = "";
-												try {
-													template = IOUtils.toString(tURL, "UTF8");
-												} catch (IOException e) {
-													e.printStackTrace();
+											{
+												String templateFile = checker.getJsonDefectTemplateFilename();
+												URL tURL = Config.class.getResource("/checkers/" + templateFile);
+												if (tURL != null) {
+													String template = "";
+													try {
+														template = IOUtils.toString(tURL, "UTF8");
+													} catch (IOException e) {
+														e.printStackTrace();
+													}
+													checker.setJsonDefectTemplate(template);
+												} else {
+													_logger.error("Template for defect not found at {}", templateFile);
 												}
-												checker.setJsonDefectTemplate(template);
-											} else {
-												_logger.error("Template for defect not found at " + templateFile);
 											}
+
+											{
+												String templateFile = checker.getJsonDefectEventTemplateFilename();
+												URL tURL = Config.class.getResource("/checkers/" + templateFile);
+												if (tURL != null) {
+													String template = "";
+													try {
+														template = IOUtils.toString(tURL, "UTF8");
+													} catch (IOException e) {
+														e.printStackTrace();
+													}
+													checker.setJsonDefectEventTemplate(template);
+												} else {
+													_logger.error("Template for defect not found at {}", templateFile);
+												}
+											}
+
 										} else {
-											_logger.error("Unable to load checker from file " + nextFile.getAbsolutePath());
+											_logger.error("Unable to load checker from file {}", nextFile.getAbsolutePath());
 											result = false;
 										}
 									}
@@ -464,8 +535,15 @@ public class Config {
 		return reportFile;
 	}
 
+	public void setFuntionsFileName(String v) {
+		metricsFileName = v;
+	}
+
 	public String getFunctionsFileName() {
-		return getOutputDir() + "/FUNCTION.metrics.xml.gz";
+		if (metricsFileName == null) {
+			return getOutputDir() + "/FUNCTION.metrics.xml.gz";
+		}
+		return metricsFileName;
 	}
 
 	//
@@ -554,7 +632,7 @@ public class Config {
 	public boolean isValidCheckerName(String name) {
 		return name != null && !name.isEmpty();
 	}
-	
+
 	//
 	// ******************************************************************************************************************
 	//
@@ -572,7 +650,7 @@ public class Config {
 		if (!isValidCheckerName(name)) {
 			throw new IllegalArgumentException("Checker's name must be non null and not empty");
 		}
-		
+
 		Checker checker = getAvailableChecker(name);
 		if ((checker != null) && (checker.isValid())) {
 			enabledCheckers.add(checker);
@@ -592,11 +670,11 @@ public class Config {
 		}
 		return enabledCheckers().filter(c -> checkerName.equals(c.getName())).findFirst().orElse(null) != null;
 	}
-	
+
 	public Stream<Checker> enabledCheckers() {
 		return enabledCheckers.stream();
 	}
-	
+
 	//
 	// ******************************************************************************************************************
 	//
@@ -701,7 +779,7 @@ public class Config {
 	public Stream<Defect> check(Measurable metrics) {
 
 		return enabledCheckers.stream() // List all enabled checkers
-				.filter(checker -> checker.filter(metrics)) // Filter out checkers that doesn't apply to this function
+				.filter(checker -> checker.canCheck(metrics)) // Filter out checkers that doesn't apply to this function
 				.map(checker -> checker.check(metrics)) // Check function's metrics with current
 				.filter(defect -> defect != null); // Filter out null defects
 	}
@@ -720,8 +798,8 @@ public class Config {
 		// ----------------------------------------
 
 		if (idir == null) {
-			result = false;
-			_logger.error("No Coverity analysis intermediate directory defined.");
+			// result = false;
+			_logger.warn("No Coverity analysis intermediate directory defined.");
 		} else {
 			File dir = new File(idir);
 			if (!dir.isDirectory()) {
@@ -738,8 +816,8 @@ public class Config {
 			if (targetPath != null) {
 				File outputDir = new File(targetPath);
 				if (!outputDir.isDirectory()) {
-					_logger.error("Coverity output directory not found at '" + targetPath + "'");
-					result = false;
+					_logger.warn("Coverity output directory not found at '" + targetPath + "'");
+					// result = false;
 				} else if (!outputDir.canWrite()) {
 					_logger.error("Write access permission denied on Coverity output directory at '" + targetPath + "'");
 					result = false;
@@ -854,7 +932,7 @@ public class Config {
 					if (new File(dirName).isDirectory()) {
 						setConfigDir(dirName);
 					} else {
-						_logger.error("Bad  configuration directory specified (not a directory): '" + dirName + "'");
+						_logger.error("Bad  configuration directory specified (not a directory): '{}'", dirName);
 					}
 				} else {
 					_logger.info("There's no custom configuration specified, using embedded configurations.");
@@ -876,17 +954,19 @@ public class Config {
 				// ----------------------------------------------------------------
 				{
 					Properties props = line.getOptionProperties("overwrite");
-					for (String name : props.stringPropertyNames()) {
-						if ("dir".equals(name)) {
-							setIDIR(props.getProperty(name));
-						} else if ("config".equals(name)) {
-							setConfigDir(props.getProperty(name));
-						} else if ("output".equals(name)) {
-							setOutputTag(props.getProperty(name));
-						} else if ("name".equals(name)) {
-							setName(props.getProperty(name));
-						} else if ("description".equals(name)) {
-							setDescription(props.getProperty(name));
+					for (String pname : props.stringPropertyNames()) {
+						if ("dir".equals(pname)) {
+							setIDIR(props.getProperty(pname));
+						} else if ("config".equals(pname)) {
+							setConfigDir(props.getProperty(pname));
+						} else if ("metrics".equals(pname)) {
+							setFuntionsFileName(props.getProperty(pname));
+						} else if ("output".equals(pname)) {
+							setOutputTag(props.getProperty(pname));
+						} else if ("name".equals(pname)) {
+							setName(props.getProperty(pname));
+						} else if ("description".equals(pname)) {
+							setDescription(props.getProperty(pname));
 						}
 					}
 				}
@@ -985,19 +1065,18 @@ public class Config {
 									if (checker != null) {
 										if (checker.hasMetric(metricName)) {
 											checker.setThreshold(metricName, threshold);
-											_logger.info("Threshold for metric " + metricName + " in checker " + checkerName + " changed to "
-													+ threshold);
+											_logger.info("Threshold for metric {} in checker {} changed to {}.", metricName, checkerName,
+													threshold);
 										} else {
-											_logger.error("Unknown metric name " + metricName + " for checker " + checkerName);
+											_logger.error("Unknown metric name {} for checker {}", metricName, checkerName);
 											result = false;
 										}
 									} else {
-										_logger.error("Unable to find or enable the checker " + checkerName);
+										_logger.error("Unable to find or enable the checker {}", checkerName);
 										result = false;
 									}
 								} catch (NumberFormatException e) {
-									_logger.error(
-											"Unable to parse metric threshold for checker " + checkerName + " and metric " + metricName);
+									_logger.error("Unable to parse threshold for checker {} and metric {}", checkerName, metricName);
 									result = false;
 								}
 							}
@@ -1020,7 +1099,17 @@ public class Config {
 					if (new File(value).isDirectory()) {
 						setIDIR(value);
 					} else {
-						_logger.error("Bad intermediate directory specified (not a directory) : '" + value + "'");
+						_logger.error("Bad intermediate directory specified (not a directory) : '{}'", value);
+						result = false;
+					}
+				}
+
+				if (line.hasOption("metrics")) {
+					String value = line.getOptionValue("metrics");
+					if (new File(value).isFile()) {
+						setFuntionsFileName(value);
+					} else {
+						_logger.error("Bad metric fie name (not found) : '{}'", value);
 						result = false;
 					}
 				}

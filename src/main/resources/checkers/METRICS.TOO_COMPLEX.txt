@@ -18,7 +18,7 @@
         "file": "${file}",
         "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
         "linkText": "Wikipedia on CCM",
-        "description": "The Cyclomatic Complexity Measure (MacCabe) is ${cc} which is above the threshold ${cc.threshold} and the LOC is ${loc} above ${loc.threshold}.",
+        "description": "The Cyclomatic Complexity Measure (MacCabe) is ${ccm} which is above the threshold ${ccm.threshold} and the LOC is ${loc} above ${loc.threshold}.",
         "line": ${ml},
         "main": true
       }

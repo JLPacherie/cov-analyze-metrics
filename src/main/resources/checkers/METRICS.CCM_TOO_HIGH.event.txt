@@ -1,0 +1,9 @@
+{
+  "tag": "CCM metric violation",
+  "file": "${file}",
+  "linkUrl": "https://en.wikipedia.org/wiki/Cyclomatic_complexity",
+  "linkText": "Wikipedia on CCM",
+  "description": "The Cyclomatic Complexity Measure (MacCabe) is ${ccm} which is above the threshold ${ccm.threshold}.",
+  "line": ${ml},
+  "main": true
+}

@@ -19,5 +19,6 @@
     }    
   ],
 
-  "defect-template": "METRICS.CCM_TOO_HIGH.txt"
+  "defect-template": "METRICS.CCM_TOO_HIGH.txt",
+  "defect-event-template": "METRICS.CCM_TOO_HIGH.event.txt"
 }
