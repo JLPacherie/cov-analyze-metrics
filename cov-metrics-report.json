@@ -1,0 +1,87 @@
+
+{
+	"header" : {
+		"version" : 1,
+		"format" : "cov-import-results input" 
+	},
+	
+	"issues": [
+		{
+    "checker": "METRICS.FILE_HAS_TOO_MANY_FUNCTIONS",
+    "extra": "metric_violation",
+    "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/bignum.c",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Implementing too many functions in a same file is harder to maintain. This file has 54.0 functions which is above the threshold 50.0.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/bignum.c",
+        "description": "The number of functions in file /home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/bignum.c is 54.0 which is above the threshold 50.0.",
+        "line": 1,
+        "main": true
+      }
+    ]
+ },
+		{
+    "checker": "METRICS.FILE_HAS_TOO_MANY_FUNCTIONS",
+    "extra": "metric_violation",
+    "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/ssl_tls.c",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Implementing too many functions in a same file is harder to maintain. This file has 157.0 functions which is above the threshold 50.0.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/ssl_tls.c",
+        "description": "The number of functions in file /home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/ssl_tls.c is 157.0 which is above the threshold 50.0.",
+        "line": 1,
+        "main": true
+      }
+    ]
+ },
+		{
+    "checker": "METRICS.FILE_HAS_TOO_MANY_FUNCTIONS",
+    "extra": "metric_violation",
+    "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/tests/test_suite_mpi.c",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Implementing too many functions in a same file is harder to maintain. This file has 59.0 functions which is above the threshold 50.0.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/tests/test_suite_mpi.c",
+        "description": "The number of functions in file /home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/tests/test_suite_mpi.c is 59.0 which is above the threshold 50.0.",
+        "line": 1,
+        "main": true
+      }
+    ]
+ }
+	],
+	"sources": [
+		{ "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/bignum.c", "encoding": "ASCII" },
+		{ "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/library/ssl_tls.c", "encoding": "ASCII" },
+		{ "file": "/home/pacherie/Workspaces/Demos/projects/mbedtls/2.1.0/code/tests/test_suite_mpi.c", "encoding": "ASCII" }
+	]
+}

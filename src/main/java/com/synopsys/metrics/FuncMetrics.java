@@ -1,17 +1,16 @@
 package com.synopsys.metrics;
 
-import com.synopsys.sipm.model.Parameter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.io.File;
+import java.util.stream.Stream;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.synopsys.sipm.model.Parameter;
 
 /**
  * Manages the code metrics for a single function. Each components of the XML metrics structure provided by Coverity is
@@ -151,10 +150,6 @@ public class FuncMetrics extends Measurable {
 							result = true;
 						}
 
-						if (value.equals("org.apache.catalina.mbeans.ContextResourceMBean")) {
-							_logger.debug("here");
-						}
-
 						if (!value.isEmpty()) {
 							set(key, value);
 						}
@@ -223,7 +218,7 @@ public class FuncMetrics extends Measurable {
 		// ------------------------------------------------------------------------
 		String strNames = get("names", "");
 		if (strNames.isEmpty()) {
-			_logger.warn("There's no 'names' element for " + getPathname());
+			_logger.warn("There's no 'names' element for {}",getPathname());
 		} else {
 			String[] fields = strNames.split(";");
 			for (String field : fields) {
