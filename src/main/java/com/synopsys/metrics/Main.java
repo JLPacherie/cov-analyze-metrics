@@ -1,30 +1,20 @@
 package com.synopsys.metrics;
 
-import static java.util.stream.Collectors.joining;
+import com.synopsys.sipm.model.Parameter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Spliterators;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.hazelcast.internal.metrics.metricsets.FileMetricSet;
-import com.synopsys.sipm.model.Parameter;
+import static java.util.stream.Collectors.joining;
 
 public class Main {
 
@@ -37,6 +27,8 @@ public class Main {
 
 	/** Initialize the application for the options on the CLI. */
 	public boolean init(String[] args) {
+		boolean result = true;
+
 		_logger.info("Creating a new configuration from the CLI options.");
 		config = new Config(args);
 
@@ -46,13 +38,13 @@ public class Main {
 			_logger.info("There are " + config.enabledCheckers.size() + " checkers to process.");
 
 		} else {
-
+			result = false;
 			System.out.println(config.getStandardBanner());
 			System.out.println("Execution failed, check log file and command line usage with --help.");
 			System.exit(-1);
 		}
 
-		return true;
+		return result;
 	}
 
 	//
@@ -284,7 +276,7 @@ public class Main {
 		// ----------------------------------------------------------------------------------------------------------------
 		{
 			try (FileOutputStream os = new FileOutputStream(config.getReportFile());
-					Writer writer = new OutputStreamWriter(os, "UTF8");) {
+					 Writer writer = new OutputStreamWriter(os, StandardCharsets.UTF_8)) {
 
 				writer.write("\n" + "{\n" + "\t\"header\" : {\n" + "\t\t\"version\" : 1,\n"
 						+ "\t\t\"format\" : \"cov-import-results input\" \n" + "\t},\n" + "\t\n" + "\t\"issues\": [\n");

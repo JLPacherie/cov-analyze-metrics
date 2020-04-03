@@ -8,7 +8,8 @@ import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DisplayName("Utilities")
 class UtilsTest {
@@ -61,7 +62,7 @@ class UtilsTest {
 
   @Test
   void loadJson() {
-    String jsonFilename = "./config/test_config1.json";
+    String jsonFilename = "./tests/test_config1.json";
     JsonNode jsonRoot= Utils.getJsonNodeFromFile(jsonFilename);
 
     assertNotNull(jsonRoot,"Can't parse JSON file");

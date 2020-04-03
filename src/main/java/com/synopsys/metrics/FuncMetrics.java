@@ -1,16 +1,14 @@
 package com.synopsys.metrics;
 
-import java.io.File;
-import java.util.stream.Stream;
+import com.synopsys.sipm.model.Parameter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.synopsys.sipm.model.Parameter;
+import java.io.File;
+import java.util.stream.Stream;
 
 /**
  * Manages the code metrics for a single function. Each components of the XML metrics structure provided by Coverity is
@@ -27,7 +25,7 @@ public class FuncMetrics extends Measurable {
 	public static String tagCOVERAGE = "coverage";
 	public static String tagIMPACT = "impact";
 
-	public static String loadedTags[] = { tagMETRICS, tagFILE, tagNAMES, tagCOVERAGE, tagIMPACT };
+	public static String[] loadedTags = { tagMETRICS, tagFILE, tagNAMES, tagCOVERAGE, tagIMPACT };
 
 	public FuncMetrics() {
 		super("Function Metrics");

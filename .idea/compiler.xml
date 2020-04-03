@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
-      <module name="cov-analyze-metrics" target="1.8" />
+      <module name="cov-analyze-metrics" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

@@ -18,6 +18,7 @@
     }
   ],
 
-  "defect-template": "METRICS.LOC_TOO_HIGH.txt"
+  "defect-template": "METRICS.LOC_TOO_HIGH.txt",
+  "defect-event-template": "METRICS.LOC_TOO_HIGH.event.txt"
 
 }

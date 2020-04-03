@@ -1,15 +1,10 @@
 package com.synopsys.metrics.checkers;
 
+import com.synopsys.metrics.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-
-import com.synopsys.metrics.Checker;
-import com.synopsys.metrics.CompositeMetrics;
-import com.synopsys.metrics.Defect;
-import com.synopsys.metrics.Measurable;
-import com.synopsys.metrics.Metrics;
-import com.synopsys.metrics.ModuleMetrics;
 
 public class ModuleHasTooManyFiles extends Checker {
 
