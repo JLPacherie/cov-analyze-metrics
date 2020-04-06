@@ -17,7 +17,7 @@
         "tag": "LOC metric violation",
         "file": "${file}",
         "description": "The LOC is ${loc} above ${loc.threshold}.",
-        "line": ${ml},
+        "line": ${metrics.ml},
         "main": true
       }
     ]

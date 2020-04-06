@@ -57,7 +57,7 @@ public abstract class Measurable extends ParameterSet {
   public double getMetric(String metricsName) {
     double result = 0.0;
     if (isMetrics(metricsName)) {
-      String metricValue = get(metricsName, "0.0");
+      String metricValue = get(tagMETRICS_PREFIX + metricsName, "0.0");
       try {
         result = Double.parseDouble(metricValue);
       } catch (NumberFormatException e) {
@@ -65,7 +65,7 @@ public abstract class Measurable extends ParameterSet {
         result = 0.0;
       }
     } else {
-      _logger.warn("Requesting metrics with unknown name '{}' on '{}'", metricsName, this);
+      _logger.warn("Requesting metrics with unknown name '{}' on '{}'", metricsName, this.getName());
     }
     return result;
   }

@@ -7,10 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="cov-analyze-metrics" />
+        <module name="sicm-core" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="cov-analyze-metrics" target="11" />
+      <module name="sicm-core" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

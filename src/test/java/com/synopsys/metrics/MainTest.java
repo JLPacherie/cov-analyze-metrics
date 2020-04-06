@@ -65,7 +65,7 @@ class MainTest {
       if (metricsList != null) {
         for (File metricsFile : metricsList) {
           _logger.info("Processing metrics file {}", metricsFile.getName());
-          String defectsFile = metricsFile.getAbsolutePath().substring(0, metricsFile.getAbsolutePath().length() - 23);
+          String defectsFile = metricsFile.getAbsolutePath().substring(0, metricsFile.getAbsolutePath().length() - 24);
           defectsFile += "-defects.json";
 
           String args = baseArgs + "--metrics " + metricsFile + " -o " + defectsFile;

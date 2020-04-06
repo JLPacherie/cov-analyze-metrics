@@ -14,3 +14,5 @@ out/
 cov-analyze-metrics\.iml
 
 \.settings/
+/bin/cov-analyze-metrics-1.0.jar
+/tests/tests-all.log

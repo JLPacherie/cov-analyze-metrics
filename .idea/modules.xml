@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/cov-analyze-metrics.iml" filepath="$PROJECT_DIR$/cov-analyze-metrics.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SICM/sicm-core/sicm-core.iml" filepath="$PROJECT_DIR$/../SICM/sicm-core/sicm-core.iml" />
     </modules>
   </component>
 </project>
