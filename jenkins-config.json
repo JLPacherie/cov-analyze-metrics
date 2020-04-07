@@ -1,0 +1,91 @@
+{
+
+	// Version number of the configuration file
+	"version": "1.0",
+
+	"includes": [
+		// --------------------------------------------------------------------------
+		"coverity.json",     // Base definitions for Coverity SAST Analysis
+		"blackduck.json",    // Base definitions for BlackDuck Source SCA Analysis 
+		"bdba.json",         // Base definitions for BlackDuck Binary SCA Analysis 
+		"compliance.json",   // Base definitions for Compliance Gate
+		// --------------------------------------------------------------------------
+		"cov-java-webapp.json"  // Additional Coverity definitions for Java/JS based webapp
+	],
+
+	// **************************************************************************
+	// Coverity SAST Configuration for this project (overwrites standard ones)
+	// **************************************************************************
+	
+	"coverity": {
+		// Does Coverity analysis needed for this project ?
+		"enabled": true,
+		// Overweritte default version of coverity analysis engine
+		"version": "last",
+	},
+
+	// **************************************************************************
+	// BlackDuck SCA Configuration for this project (overwrites standard ones)
+	// **************************************************************************
+	"blackduck": {
+		"enabled": true
+	},
+
+	// **************************************************************************
+	// Project Specific Build Configuration for this project
+	// **************************************************************************
+	"project": {
+		
+		// The name of the project
+		"name": "cov-analyze-metrics",
+
+		// The version name of the project
+		"version": "2019.09",
+		
+		// Where's is located (checked-out) the project in the Workspace
+		"path": "project",
+
+		// Where are located the source code. Used by SCA for source code
+		"sources": [
+			"src/main"
+		],
+
+		// Where are located the target artifacts. Used by SCA for Binary
+		"targets": [
+			"target/*dependencies*.jar"
+		],
+
+		//
+		// Configuration of the project build.
+		//
+		"build": {
+			
+			"enabled": true,
+			"incremental": true,
+
+			"maven_cache": "/opt/maven/repos",
+
+			//
+			// The build phase is executed from a Docker container
+			//
+			"docker": {
+				"image": "maven:3.6-jdk-11",
+				"args": ""
+			},
+
+			//
+			// Build script / command
+			//
+
+			// This command is executed before trying to build or clean
+			"init_command": "",
+
+			// This command is executed only for a fresh / full build
+			"build_command": " mvn -Dmaven.repo.local=\"${.project.build.maven_cache}\" -DskipTests package",
+
+			// This command is for building the artifacts
+			"clean_command": " mvn -Dmaven.repo.local=\"${.project.build.maven_cache}\" -DskipTests clean"
+		},
+
+	}
+}

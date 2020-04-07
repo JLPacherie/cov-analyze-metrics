@@ -1,0 +1,18 @@
+{
+    "checker": "METRICS.MODULE_HAS_TOO_MANY_FILES",
+    "extra": "metric_violation",
+    "file": "${file}",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Writing module with too many files is harder to maintain. This component has ${file_count} files which is above the threshold ${file_count.threshold}.",
+      "localEffect": "Hard to maintain module",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      EVENTS
+    ]
+ }

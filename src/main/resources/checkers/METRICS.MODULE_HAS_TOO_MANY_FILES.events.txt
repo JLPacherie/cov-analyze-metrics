@@ -1,0 +1,7 @@
+{
+  "tag": "Component size violation",
+  "file": "${file}",
+  "description": "The file is one of the ${file_count} ones in module ${module}, which is above the threshold ${file_count.threshold}.",
+  "line": 1,
+  "main": true
+}

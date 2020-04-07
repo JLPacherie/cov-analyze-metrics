@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
 		<attributes>
+			<attribute name="test" value="true"/>
 			<attribute name="optional" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="test" value="true"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" output="target/classes" path="src/main/java">
@@ -18,25 +18,19 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/commons-cli/commons-cli/1.4/commons-cli-1.4.jar" sourcepath="M2_REPO/commons-cli/commons-cli/1.4/commons-cli-1.4-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/logging/log4j/log4j-api/2.6.1/log4j-api-2.6.1.jar" sourcepath="M2_REPO/org/apache/logging/log4j/log4j-api/2.6.1/log4j-api-2.6.1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apache/logging/log4j/log4j-core/2.6.1/log4j-core-2.6.1.jar" sourcepath="M2_REPO/org/apache/logging/log4j/log4j-core/2.6.1/log4j-core-2.6.1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/junit/jupiter/junit-jupiter-api/5.5.0-M1/junit-jupiter-api-5.5.0-M1.jar" sourcepath="M2_REPO/org/junit/jupiter/junit-jupiter-api/5.5.0-M1/junit-jupiter-api-5.5.0-M1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/apiguardian/apiguardian-api/1.0.0/apiguardian-api-1.0.0.jar" sourcepath="M2_REPO/org/apiguardian/apiguardian-api/1.0.0/apiguardian-api-1.0.0-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/opentest4j/opentest4j/1.1.1/opentest4j-1.1.1.jar" sourcepath="M2_REPO/org/opentest4j/opentest4j/1.1.1/opentest4j-1.1.1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/junit/platform/junit-platform-commons/1.5.0-M1/junit-platform-commons-1.5.0-M1.jar" sourcepath="M2_REPO/org/junit/platform/junit-platform-commons/1.5.0-M1/junit-platform-commons-1.5.0-M1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/2.6/commons-io-2.6.jar" sourcepath="M2_REPO/commons-io/commons-io/2.6/commons-io-2.6-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.8.11.1/jackson-databind-2.8.11.1.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.8.11.1/jackson-databind-2.8.11.1-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.8.10/jackson-core-2.8.10.jar" sourcepath="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.8.10/jackson-core-2.8.10-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/sicm-core">
+		<attributes>
+			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>

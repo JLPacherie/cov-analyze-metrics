@@ -1,163 +1,209 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.synopsys.metrics</groupId>
-	<artifactId>cov-analyze-metrics</artifactId>
-	<version>1.0.0</version>
-	<packaging>jar</packaging>
-	<name>Coverity Metrics Analyzer</name>
+  <groupId>com.synopsys.metrics</groupId>
+  <artifactId>cov-analyze-metrics</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+  <name>Coverity Metrics Analyzer</name>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<!--  Log4J is safe as of 2019.09 -->
-	<!-- 		<log4j.version>2.12.1</log4j.version> -->
-		<!--  Log4J has 1 vuln as of 2019.09 -->
-		<log4j.version>2.8.1</log4j.version>
-	</properties>
+  <properties>
 
-	<dependencies>
-		<dependency> 
-			<groupId>commons-cli</groupId>
-			<artifactId>commons-cli</artifactId>
-			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>${log4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.5.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>2.10.0.pr2</version>
-		</dependency>
-	</dependencies>
+    <!-- ****************************************************************** -->
+    <!-- ** Java JDK                                                     ** -->
+    <!-- ****************************************************************** -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>11</java.version>
 
-	<build>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <junit.jupiter.version>5.4.2</junit.jupiter.version>
+    <junit.platform.version>1.5.2</junit.platform.version>
+
+  </properties>
+
+  <dependencies>
+
+    <!-- ************************************ -->
+    <!-- ** Dependencies for Using JUnit 5 ** -->
+    <!-- ************************************ -->
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-commons</artifactId>
+      <version>${junit.platform.version}</version>
+    </dependency>
+
+    <!-- ************************************ -->
+    <!-- ** Command Line Options Parsing   ** -->
+    <!-- ************************************ -->
+
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.6</version>
+    </dependency>
+
+    <!-- ************************************ -->
+    <!-- ** Execution Logging              ** -->
+    <!-- ************************************ -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.12.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.12.1</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.10.0.pr2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.10.0.pr2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.synopsys.sicm</groupId>
+      <artifactId>sicm-core</artifactId>
+      <version>2019.03</version>
+    </dependency>
+  </dependencies>
+
+  <build>
 
 
 
-		<plugins>
+    <plugins>
 
 			<!-- ********************************************************** -->
 			<!-- Java Compiler Plugin -->
 			<!-- ********************************************************** -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <release>11</release>
+        </configuration>
 
 				<!-- This is needed to launch compilation when phase compile is invoked -->
-				<executions>
-					<execution>
+        <executions>
+          <execution>
 						<!-- Lifecycle phase -->
-						<phase>compile</phase>
-						<goals>
+            <phase>compile</phase>
+            <goals>
 							<!-- Goal to trigger as defined in the plugin -->
-							<goal>compile</goal>
-						</goals>
-					</execution>
-				</executions>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
 
-			</plugin>
+      </plugin>
 
 			<!-- ********************************************************** -->
 			<!-- Copy Resource Files to Compiled Class Folder -->
 			<!-- ********************************************************** -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.1.0</version>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
 				<!-- This is needed to launch compilation when phase compile is invoked -->
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>resources</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>resources</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
 			<!-- ********************************************************** -->
 			<!-- Build an Executable Jar with all dependencies -->
 			<!-- ********************************************************** -->
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>com.synopsys.metrics.Main</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>com.synopsys.metrics.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
 
-			</plugin>
+      </plugin>
 
 			<!-- ********************************************************** -->
 			<!-- Copy Executable Jar with all dependencies to bin dir -->
 			<!-- ********************************************************** -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<id>install-jar-files</id>
-						<phase>install</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target name="Install copy JAR files to bin directory">
-								<copy tofile="${basedir}/bin/cov-analyze-metrics-1.0.jar">
-									<fileset dir="${project.build.directory}">
-										<include name="cov-analyze-metrics*-jar-with-dependencies.jar" />
-									</fileset>
-								</copy>
-							</target>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <id>install-jar-files</id>
+            <phase>install</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target
+                name="Install copy JAR files to bin directory">
+                <copy
+                  tofile="${basedir}/bin/cov-analyze-metrics-1.0.jar">
+                  <fileset dir="${project.build.directory}">
+                    <include
+                      name="cov-analyze-metrics*-jar-with-dependencies.jar" />
+                  </fileset>
+                </copy>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

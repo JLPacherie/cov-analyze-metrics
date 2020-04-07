@@ -1,0 +1,24 @@
+{
+    "checker": "METRICS.FILE_HAS_TOO_MANY_LOC",
+    "extra": "metric_violation",
+    "file": "${file}",
+    "function": "",
+    "subcategory": "code_quality",
+    "properties": {
+      "type": "Component too large",
+      "category": "Code maintainability issues",
+      "impact": "low",
+      "longDescription": "Implementing too many line of code in a same file is harder to maintain. This file has a total of ${loc_sum} loc which is above the threshold ${loc_sum.threshold}.",
+      "localEffect": "Hard to maintain function",
+      "issueKind": "QUALITY"
+    },
+    "events": [
+      {
+        "tag": "Component size violation",
+        "file": "${file}",
+        "description": "The number of functions in file ${file} is ${loc_sum} which is above the threshold ${loc_sum.threshold}.",
+        "line": 1,
+        "main": true
+      }
+    ]
+ }

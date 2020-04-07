@@ -9,252 +9,319 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Checker {
 
-    protected Logger logger = LogManager.getLogger(Checker.class);
+	protected Logger logger = LogManager.getLogger(Checker.class);
 
+	private String name = null;
+	private String description = null;
 
-    private String name = null;
-    private String description = null;
-    private List<Metrics> allMetrics = new ArrayList<Metrics>();
-    private String jsonDefectTemplate = null;
-    private String jsonDefectTemplateFilename = null;
+	protected List<Metrics> _allMetrics = new ArrayList<>();
 
-    public Checker() {
+	private String jsonDefectTemplate = null;
+	protected String jsonDefectTemplateFilename = null;
 
-    }
+	private String jsonDefectEventTemplate = null;
+	protected String jsonDefectEventTemplateFilename = null;
 
-    public Checker(File file) {
-        if (!load(file.getAbsolutePath())) {
-            logger.error("Unable to load a checker from file " + file.getAbsolutePath());
-        }
-    }
+	public Checker() {
 
-    public Checker(InputStream is) {
-        if (!load(is)) {
-            logger.error("Unable to load a checker from  input stream");
-        }
-    }
+	}
 
-    //
-    // ******************************************************************************************************************
-    //
+	/**
+	 * Load the checker definition from the given file.
+	 */
+	public Checker(File file) {
+		if (!load(file.getAbsolutePath())) {
+			logger.error("Unable to load a checker from file {}.", file.getAbsolutePath());
+		}
+	}
 
-    public String getName() {
-        return name;
-    }
+	/**
+	 * Loaf the checker definition form the given input stream.
+	 */
+	public Checker(InputStream is) {
+		if (!load(is)) {
+			logger.error("Unable to load a checker from  input stream");
+		}
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	//
+	// ******************************************************************************************************************
+	//
 
-    //
-    // ******************************************************************************************************************
-    //
+	public String getName() {
+		return name;
+	}
 
-    public String getDescription() {
-        return description;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	//
+	// ******************************************************************************************************************
+	//
 
-    //
-    // ******************************************************************************************************************
-    //
+	public String getDescription() {
+		return description;
+	}
 
-    public Metrics getMetric(String name) {
-        return allMetrics.stream()
-                .filter(m -> m.name.equals(name) || m.metric.equals(name))
-                .findFirst()
-                .orElse(null);
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public boolean hasMetric(String name) {
-        return getMetric(name) != null;
-    }
+	//
+	// ******************************************************************************************************************
+	//
 
-    public double getThreshold(String metricName) {
+	/** If there's a metric identified by the given name in this checker then return it. */
+	public Metrics getMetric(String name) {
+		return _allMetrics.stream().filter(m -> m.name.equals(name) || m.metric.equals(name)).findFirst().orElse(null);
+	}
 
-        Metrics metric = allMetrics.stream()
-                .filter(m -> m.name.equals(metricName) || m.metric.equals(metricName))
-                .findFirst()
-                .orElse(null);
+	public boolean hasMetric(String name) {
+		return getMetric(name) != null;
+	}
 
-        if (metric != null) {
-            return metric.value;
-        }
-        return -1;
-    }
+	public double getThreshold(String metricName) {
 
+		Metrics metric = _allMetrics.stream().filter(m -> m.name.equals(metricName) || m.metric.equals(metricName))
+				.findFirst().orElse(null);
 
-    public void setThreshold(String metricName, double threshold) {
+		if (metric != null) {
+			return metric.value;
+		}
+		return -1;
+	}
 
-        Metrics metric = allMetrics.stream()
-                .filter(m -> m.name.equals(metricName) || m.metric.equals(metricName))
-                .findFirst()
-                .orElse(null);
+	public void setThreshold(String metricName, double threshold) {
 
-        if (metric != null) {
-            metric.value = threshold;
-        } else {
-            logger.error("Unknown metric name. " + metricName);
-        }
-    }
+		Metrics metric = _allMetrics.stream().filter(m -> m.name.equals(metricName) || m.metric.equals(metricName))
+				.findFirst().orElse(null);
 
+		if (metric != null) {
+			metric.value = threshold;
+		} else {
+			logger.error("Unknown metric name '{}'", metricName);
+		}
+	}
 
-    public String getJsonDefectTemplateFilename() {
-        return jsonDefectTemplateFilename;
-    }
+	//
+	// ******************************************************************************************************************
+	//
 
-    //
-    // ******************************************************************************************************************
-    //
+	public Stream<Metrics> metrics() {
+		return _allMetrics.stream();
+	}
 
-    public Stream<Metrics> metrics() {
-        return allMetrics.stream();
-    }
+	//
+	// ******************************************************************************************************************
+	//
 
-    //
-    // ******************************************************************************************************************
-    //
+	public boolean isValid() {
+		boolean result = true;
 
-    public boolean isValid() {
-        boolean result = true;
+		if ((getName() == null) || !getName().startsWith("METRICS.")) {
+			result = false;
+			logger.error("Invalid checker name (prefix is not METRICS.) '{}'", getName());
+		}
 
-        if ((getName() == null) || !getName().startsWith("METRICS.")) {
-            result = false;
-            logger.error("Invalid checker name : " + getName());
-        }
+		if (_allMetrics.isEmpty()) {
+			logger.error("There's no metrics to check for in this checker ??");
+			result = false;
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    //
-    // ******************************************************************************************************************
-    //
+	//
+	// ******************************************************************************************************************
+	//
 
-    // TODO Implement file path regex matching filter for the Checker
+	// TODO Implement file path regex matching filter for the Checker
 
-    /**
-     * Returns true if the current checker is applicable to the given function metrics.
-     */
-    public boolean filter(FuncMetrics funcMetrics) {
-        return funcMetrics != null;
-    }
+	/**
+	 * Returns true if the current checker is applicable to the given function metrics.
+	 */
+	public boolean canCheck(Measurable measured) {
+		if (!isValid()) {
+			logger.debug("Can't check '{}' because invalid config.", this);
+		}
 
-    /**
-     * Applies the checker on the metrics from the given function. Returns a Defect if all the thresholds are passed over.
-     */
-    public Defect check(FuncMetrics funcMetrics) {
+		return isValid() && measured != null;
+	}
 
-        assert allMetrics.size() > 0 : "There's no metrics to check for in this checker ??";
-        assert funcMetrics != null : "There's no function metrics provided for checking.";
-        assert filter(funcMetrics) : "The function metrics should be filtered before invoking check()";
+	/**
+	 * Applies the checker on the metrics from the given function. Returns a Defect if all the thresholds are passed over.
+	 */
+	public Defect check(Measurable measured) {
 
-        Defect result = null;
+		if (!canCheck(measured)) {
+			throw new IllegalArgumentException("Can't check measurable: " + measured);
+		}
 
-        List<String> violatingMetrics = allMetrics.stream()
-                .map(metric -> funcMetrics.getMetric(metric.metric) > metric.value ? metric.metric : null)
-                .filter(m -> m != null)
-                .collect(Collectors.toList());
+		Defect result = null;
 
-        if (violatingMetrics.size() >= allMetrics.size()) {
-            result = new Defect(this, funcMetrics);
-            result.setViolations(violatingMetrics);
-        }
-        return result;
-    }
+		List<String> violatingMetrics = _allMetrics.stream()
+				.filter(metric -> metric.scope.isEmpty() || (measured.getName().matches(metric.scope))) //
+				// For each metrics this checker puts a threshold, if the value in the measured object is above
+				// the threshold then produce the name of that metrics otherwise null
+				.map(metric -> {
+					if (measured.isMetrics(metric.metric)) {
+						return measured.getMetric(metric.metric) > metric.value ? metric.metric : null;
+					} else {
+						logger.warn("For checker {} Requesting unknown metrics '{}' on {}", getName(), metric.metric, measured);
+					}
+					return null;
+				})//
+				//
+				// Filter out null values for metrics under the threshold.
+				.filter(Objects::nonNull)
+				// Collect all metrics above their threshold in the checker into a list
+				.collect(Collectors.toList());
 
-    public String getJsonDefectTemplate() {
-        return jsonDefectTemplate;
-    }
+		// If the number of metrics in the measured object above their threshold in the checkers
+		// is equal or above the total number of checked metrics in that checker then we have a defect
+		if (violatingMetrics.size() >= _allMetrics.size()) {
+			result = new Defect(this, measured);
+			result.setViolations(violatingMetrics);
+		}
 
-    public void setJsonDefectTemplate(String value) {
-        jsonDefectTemplate = value;
-    }
-    //
-    // ******************************************************************************************************************
-    //
+		return result;
+	}
 
-    public boolean load(JsonNode root) {
-        boolean result = (root != null);
-        if (result) {
-            setName(root.get("name").asText(""));
-            setDescription(root.get("description").asText(""));
-            JsonNode metrics = root.get("thresholds");
-            if (metrics.isArray()) {
-                for (JsonNode node : metrics) {
-                    Metrics metric = new Metrics();
-                    metric.name = node.get("name").asText("");
-                    metric.metric = node.get("metrics").asText("");
-                    metric.value = node.get("threshold").asDouble(0);
-                    allMetrics.add(metric);
-                }
-            }
+	//
+	// ******************************************************************************************************************
+	//
 
-            JsonNode defectTemplate = root.get("defect-template");
+	public String getJsonDefectTemplateFilename() {
+		return jsonDefectTemplateFilename;
+	}
 
-            if (defectTemplate != null) {
-                jsonDefectTemplateFilename = defectTemplate.asText("");
-            } else {
-                logger.error("No template JSON defined for defects generated by this checker.");
-                result = false;
-            }
-        }
-        return result;
-    }
+	public String getJsonDefectTemplate() {
+		return jsonDefectTemplate;
+	}
 
-    //
-    // ******************************************************************************************************************
-    //
+	public void setJsonDefectTemplate(String value) {
+		jsonDefectTemplate = value;
+	}
 
-    public boolean load(InputStream is) {
-        JsonNode node = null;
-        if (is != null) {
-            try {
-                node = Utils.getObjectMapper().readTree(is);
-            } catch (IOException io) {
-                logger.error("Unable parse JSON node from input stream.");
-            }
+	//
+	// ******************************************************************************************************************
+	//
 
-        }
-        return load(node);
-    }
+	public String getJsonDefectEventTemplateFilename() {
+		return jsonDefectEventTemplateFilename;
+	}
 
-    public boolean load(String filename) {
-        boolean result = (filename != null);
-        if (result) {
-            File file = new File(filename);
-            if (file.exists()) {
-                result = load(Utils.getJsonNodeFromFile(filename));
-            } else {
-                result = false;
-                logger.error("Checker file not found at :" + filename);
-            }
-        }
-        return result;
-    }
+	public String getJsonDefectEventTemplate() {
+		return jsonDefectEventTemplate;
+	}
 
-    public boolean save(String filename) {
-        boolean result = (filename != null);
-        if (result) {
-            result = false;
-            logger.error("Unimplemented method.");
-        }
-        return result;
-    }
+	public void setJsonDefectEventTemplate(String value) {
+		jsonDefectEventTemplate = value;
+	}
 
-    public String toString() {
-        String result = getName() + " (";
-        for (Metrics m : allMetrics) {
-            result += m.name + "=" + m.value + " ";
-        }
-        result += ")";
-        return result;
-    }
+	//
+	// ******************************************************************************************************************
+	//
+
+	public boolean load(JsonNode root) {
+		boolean result = (root != null);
+		if (result) {
+			setName(root.get("name").asText(""));
+			setDescription(root.get("description").asText(""));
+			JsonNode metrics = root.get("thresholds");
+			if (metrics.isArray()) {
+				for (JsonNode node : metrics) {
+					Metrics metric = new Metrics();
+					metric.scope = node.get("scope").asText("");
+					metric.name = node.get("name").asText("");
+					metric.metric = node.get("metrics").asText("");
+					metric.value = node.get("threshold").asDouble(0);
+					_allMetrics.add(metric);
+				}
+			}
+
+			{
+				JsonNode defectTemplate = root.get("defect-template");
+
+				if (defectTemplate != null) {
+					jsonDefectTemplateFilename = defectTemplate.asText("");
+				} else {
+					logger.error("No template JSON defined for defects generated by this checker.");
+					result = false;
+				}
+			}
+
+			{
+				JsonNode defectTemplate = root.get("defect-event-template");
+
+				if (defectTemplate != null) {
+					jsonDefectEventTemplateFilename = defectTemplate.asText("");
+				} else {
+					logger.warn("No event template JSON defined for defects generated by this checker.");
+				}
+			}
+		}
+		return result;
+	}
+
+	//
+	// ******************************************************************************************************************
+	//
+
+	public boolean load(InputStream is) {
+		JsonNode node = null;
+		if (is != null) {
+			try {
+				node = Utils.getObjectMapper().readTree(is);
+			} catch (IOException io) {
+				logger.error("Unable parse JSON node from input stream.");
+			}
+
+		}
+		return load(node);
+	}
+
+	public boolean load(String filename) {
+		boolean result = (filename != null);
+		if (result) {
+			File file = new File(filename);
+			if (file.exists()) {
+				result = load(Utils.getJsonNodeFromFile(filename));
+			} else {
+				result = false;
+				logger.error("Checker file not found at: '{}'", filename);
+			}
+		}
+		return result;
+	}
+
+	public boolean save(String filename) {
+		boolean result = (filename != null);
+		if (result) {
+			result = false;
+			logger.error("Unimplemented method.");
+		}
+		return result;
+	}
+
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		result.append(getName());
+		result.append(" (");
+		for (Metrics m : _allMetrics) {
+			result.append(m.name);
+			result.append("=");
+			result.append(m.value);
+			result.append(" ");
+		}
+		result.append(")");
+		return result.toString();
+	}
 }

@@ -8,18 +8,20 @@
   // The list of the metrics in Coverity with their associated default tresholds
   "thresholds": [
     {
+     	"scope": "Function Metrics",
       // The name of the theshold the user can adjust from the CLI
       "name" : "ccm",
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
-      "metrics": "cc",
+      "metrics": "ccm",
       // The default theshold
       "threshold": 20
     },
     {
+     	"scope": "Function Metrics",
       // The name of the theshold the user can adjust from the CLI
       "name" : "loc",
       // The name of the metrics in the Coverity file FUNCTIONS.metrics.xml.gz
-      "metrics": "lc",
+      "metrics": "loc",
       // The default theshold
       "threshold": 300
     }
